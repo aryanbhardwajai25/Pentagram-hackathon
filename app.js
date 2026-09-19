@@ -6,6 +6,7 @@ const WARDS = {
 
 const PATIENT_NAMES = ['Maya Patel', 'Jordan Davis', 'Liam Chen', 'Sofia Williams', 'Noah Wilson', 'Ava Martinez', 'Ethan Brooks', 'Olivia Thompson', 'Amir Hassan', 'Grace Kim', 'Theo Morgan', 'Nora Johnson', 'Sam Rivera', 'Priya Shah', 'Leo Anderson', 'Emma Carter', 'Daniel Lee', 'Iris Moore'];
 const DOCTORS = ['Dr. Sarah Rao', 'Dr. Chen', 'Dr. Okafor', 'Dr. Rivera', 'Dr. Singh', 'Dr. Williams'];
+const STORAGE_KEY = 'medflow_patients_data';
 let state;
 let telemetryChart;
 let toastTimer;
@@ -53,6 +54,18 @@ function getPriority(patient) { if (state.strategy === 'a') return 1000 - patien
 function availableBeds() { return state.beds.filter((bed) => !bed.patient && !isOutageBed(bed)).length; }
 function isOutageBed(bed) { return bed.type === 'ICU' && bed.index >= WARDS.ICU.count - state.icuOutage; }
 function sortedQueue() { return [...state.queue].sort((a, b) => getPriority(b) - getPriority(a)); }
+function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Storage can be unavailable in restricted browser contexts. */ } }
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.queue) && Array.isArray(parsed.beds)) return parsed;
+    }
+  } catch (error) { /* Fall back to the demo state when saved data is unreadable. */ }
+  return createInitialState();
+}
+function resetSavedData() { localStorage.removeItem(STORAGE_KEY); state = createInitialState(); saveState(); render(); showToast('Default demo data restored.'); }
 
 function render() {
   renderStats(); renderFloorPlan(); renderQueue(); renderChart(); renderDoctorPortal(); renderPatientPortal();
@@ -66,7 +79,7 @@ function renderDoctorPortal() {
   $('#doctorAvailableCount').textContent = Math.max(0, assigned.length - assigned.filter((bed) => bed.patient.acuity >= 5).length);
   $('#doctorPatientGrid').innerHTML = assigned.length ? assigned.map(({ id, patient }) => `<article class="doctor-card panel"><div class="doctor-card-top"><div class="patient-avatar">${initials(patient.name)}</div><span class="triage-badge ${getBadge(patient).className}">${getBadge(patient).label}</span></div><h3>${patient.name}</h3><p class="doctor-bed">Bed ${id}</p><div class="doctor-vitals"><div><span>Heart rate</span><strong>${patient.heartRate} <small>BPM</small></strong></div><div><span>SpO2</span><strong>${patient.spo2}<small>%</small></strong></div><div><span>Time remaining</span><strong>${Math.max(0, patient.treatment)} <small>min</small></strong></div></div><label class="note-label">Quick care note<textarea data-note-id="${id}" placeholder="Add a note for the care team...">${patient.note || ''}</textarea></label><button class="button button-primary wide" data-discharge-id="${id}">Complete Treatment / Discharge</button></article>`).join('') : '<div class="empty-role panel"><strong>No active patients assigned</strong><p>New assignments will appear here as the simulation progresses.</p></div>';
   $$('#doctorPatientGrid [data-discharge-id]').forEach((button) => button.addEventListener('click', () => dischargePatient(button.dataset.dischargeId)));
-  $$('#doctorPatientGrid [data-note-id]').forEach((textarea) => textarea.addEventListener('input', (event) => { const bed = state.beds.find((item) => item.id === event.target.dataset.noteId); if (bed && bed.patient) bed.patient.note = event.target.value; }));
+  $$('#doctorPatientGrid [data-note-id]').forEach((textarea) => textarea.addEventListener('input', (event) => { const bed = state.beds.find((item) => item.id === event.target.dataset.noteId); if (bed && bed.patient) { bed.patient.note = event.target.value; saveState(); } }));
 }
 
 function renderPatientPortal() {
@@ -80,7 +93,7 @@ function renderPatientPortal() {
   $('#patientStatusCard').innerHTML = `<div class="status-card-header"><div class="patient-avatar">${initials(patient.name)}</div><div><p class="eyebrow teal-text">Live care status</p><h3>${patient.name}</h3><span>Patient ID ${patient.id}</span></div><span class="status-pill ${waiting ? 'waiting' : 'receiving'}">${waiting ? 'Waiting' : 'In care'}</span></div><div class="patient-status-main"><div class="status-message"><span class="status-icon">${waiting ? '◷' : '✓'}</span><div><strong>${waiting ? 'Waiting for Bed Assignment' : `Currently Receiving Care in ${patient.bedId}`}</strong><p>${waiting ? 'Our team is preparing the right care space for you.' : 'Your care team is actively monitoring your treatment.'}</p></div></div><div class="patient-metrics"><div><span>${waiting ? 'Estimated wait' : 'Time remaining'}</span><strong>${waiting ? Math.max(1, 30 - patient.wait) : Math.max(0, patient.treatment)} <small>min</small></strong></div><div><span>Queue position</span><strong>${waiting ? `#${position}` : '—'}</strong></div><div><span>Assigned physician</span><strong class="physician-name">${patient.doctor || 'Assigning now'}</strong></div></div></div>`;
 }
 
-function dischargePatient(bedId) { const bed = state.beds.find((item) => item.id === bedId); if (!bed || !bed.patient) return; const name = bed.patient.name; bed.patient = null; render(); showToast(`${name} discharged. ${bedId} is now available.`); }
+function dischargePatient(bedId) { const bed = state.beds.find((item) => item.id === bedId); if (!bed || !bed.patient) return; const name = bed.patient.name; bed.patient = null; saveState(); render(); showToast(`${name} discharged. ${bedId} is now available.`); }
 
 function switchRole(role) { activeRole = role; $('#portalSelector').hidden = true; $('.topbar').hidden = false; $('#staffView').hidden = role !== 'staff'; $('#doctorView').hidden = role !== 'doctor'; $('#patientView').hidden = role !== 'patient'; if (role === 'staff' && telemetryChart) telemetryChart.resize(); render(); }
 function openPatientCheckin() { switchRole('patient'); $('#patientCheckinForm input[name="name"]').focus(); }
@@ -110,6 +123,7 @@ function addPatientFromCheckin(event) {
   const wait = Math.max(5, state.queue.length * 3 + (6 - acuity) * 2);
   const patient = createPatient({ id: `P-${state.nextId++}`, name: String(form.get('name')).trim(), age: Number(form.get('age')), concern: String(form.get('concern')).trim(), acuity, wait });
   state.queue.push(patient);
+  saveState();
   event.currentTarget.reset();
   render();
   $('#patientSelect').value = patient.id;
@@ -125,10 +139,11 @@ function tick() {
   state.beds.forEach((bed) => { if (bed.patient) { bed.patient.treatment -= increments; if (bed.patient.treatment <= 0) bed.patient = null; } });
   if (state.elapsed % 3 === 0) admitNextPatient();
   if (state.elapsed % 5 === 0) addTelemetryPoint();
+  saveState();
   render();
 }
 
-function admitNextPatient() { const ordered = sortedQueue(); const candidate = ordered.find((patient) => findBedFor(patient)); if (!candidate) return; const bed = findBedFor(candidate); bed.patient = { ...candidate, doctor: DOCTORS[(state.elapsed + bed.index) % DOCTORS.length], heartRate: candidate.acuity >= 5 ? randomInt(108, 132) : randomInt(70, 105), spo2: candidate.acuity >= 5 ? randomInt(89, 96) : randomInt(95, 100), treatment: randomInt(22, 85) }; state.queue = state.queue.filter((patient) => patient.id !== candidate.id); }
+function admitNextPatient() { const ordered = sortedQueue(); const candidate = ordered.find((patient) => findBedFor(patient)); if (!candidate) return; const bed = findBedFor(candidate); bed.patient = { ...candidate, doctor: DOCTORS[(state.elapsed + bed.index) % DOCTORS.length], heartRate: candidate.acuity >= 5 ? randomInt(108, 132) : randomInt(70, 105), spo2: candidate.acuity >= 5 ? randomInt(89, 96) : randomInt(95, 100), treatment: randomInt(22, 85) }; state.queue = state.queue.filter((patient) => patient.id !== candidate.id); saveState(); }
 function findBedFor(patient) { const preferred = state.beds.find((bed) => bed.type === patient.bedType && !bed.patient && !isOutageBed(bed)); return preferred || state.beds.find((bed) => bed.type !== 'ICU' && !bed.patient && !isOutageBed(bed)); }
 function addTelemetryPoint() { const free = availableBeds(); const total = state.beds.length - state.icuOutage; state.history.labels.push(formatClock(state.clockMinutes)); state.history.waits.push(Math.round(state.queue.reduce((sum, patient) => sum + patient.wait, 0) / Math.max(state.queue.length, 1))); state.history.utilization.push(Math.round(((total - free) / total) * 100)); if (state.history.labels.length > 12) { Object.values(state.history).forEach((values) => values.shift()); } }
 
@@ -231,10 +246,11 @@ function bindEvents() {
   $('#switchPortal').addEventListener('click', showPortalSelector);
   $('#patientSelect').addEventListener('change', renderPatientPortal);
   $('#patientCheckinForm').addEventListener('submit', addPatientFromCheckin);
+  $('#resetDataBtn').addEventListener('click', resetSavedData);
   $$('[data-close-modal]').forEach((button) => button.addEventListener('click', closeModals)); $$('.modal-backdrop').forEach((backdrop) => backdrop.addEventListener('click', (event) => { if (event.target === backdrop) closeModals(); }));
 }
 
-state = createInitialState();
+state = loadState();
 initChart();
 bindEvents();
 initScene();

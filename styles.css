@@ -48,3 +48,4 @@ h1, h2, p { margin: 0; } h1, h2, .stat-value, .staff-value strong { font-family:
 .topbar-actions { gap: 10px; }
 .app-shell { padding-top: 20px; }
 .role-shell { position: relative; z-index: 1; }
+.staff-data-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }
