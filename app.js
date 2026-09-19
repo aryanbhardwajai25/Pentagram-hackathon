@@ -7,7 +7,6 @@ const WARDS = {
 const PATIENT_NAMES = ['Maya Patel', 'Jordan Davis', 'Liam Chen', 'Sofia Williams', 'Noah Wilson', 'Ava Martinez', 'Ethan Brooks', 'Olivia Thompson', 'Amir Hassan', 'Grace Kim', 'Theo Morgan', 'Nora Johnson', 'Sam Rivera', 'Priya Shah', 'Leo Anderson', 'Emma Carter', 'Daniel Lee', 'Iris Moore'];
 const DOCTORS = ['Dr. Sarah Rao', 'Dr. Chen', 'Dr. Okafor', 'Dr. Rivera', 'Dr. Singh', 'Dr. Williams'];
 let state;
-let timerId;
 let telemetryChart;
 let toastTimer;
 let activeRole = null;
@@ -21,6 +20,7 @@ function createPatient(overrides = {}) {
     id: overrides.id || `P-${String(Math.floor(Math.random() * 900) + 100)}`,
     name: overrides.name || PATIENT_NAMES[Math.floor(Math.random() * PATIENT_NAMES.length)],
     age: overrides.age || randomInt(19, 86),
+    concern: overrides.concern || 'General care need',
     acuity,
     bedType: overrides.bedType || (acuity >= 5 ? 'ICU' : acuity >= 4 ? 'Emergency' : 'General'),
     wait: overrides.wait || 0,
@@ -42,7 +42,7 @@ function createInitialState() {
       beds.push({ id: `${type}-${String(index + 1).padStart(2, '0')}`, type, index, patient });
     }
   });
-  return { running: false, speed: 1, strategy: 'c', elapsed: 0, clockMinutes: 480, beds, queue: [createPatient({ id: 'P-482', name: 'Elena Garcia', age: 48, acuity: 4, wait: 7, bedType: 'Emergency' }), createPatient({ id: 'P-517', name: 'Marcus Reed', age: 36, acuity: 3, wait: 13, bedType: 'General' }), createPatient({ id: 'P-533', name: 'Rina Das', age: 24, acuity: 2, wait: 18, bedType: 'General' }), createPatient({ id: 'P-548', name: 'William Scott', age: 79, acuity: 4, wait: 22, bedType: 'Emergency' }), createPatient({ id: 'P-561', name: 'Camila Torres', age: 19, acuity: 1, wait: 29, bedType: 'General' })], doctors: 8, nurses: 18, icuOutage: 0, history: { labels: ['08:00'], waits: [12], utilization: [53] }, nextId: 600 };
+  return { speed: 1, strategy: 'c', elapsed: 0, clockMinutes: 480, beds, queue: [createPatient({ id: 'P-482', name: 'Elena Garcia', age: 48, acuity: 4, wait: 7, bedType: 'Emergency' }), createPatient({ id: 'P-517', name: 'Marcus Reed', age: 36, acuity: 3, wait: 13, bedType: 'General' }), createPatient({ id: 'P-533', name: 'Rina Das', age: 24, acuity: 2, wait: 18, bedType: 'General' }), createPatient({ id: 'P-548', name: 'William Scott', age: 79, acuity: 4, wait: 22, bedType: 'Emergency' }), createPatient({ id: 'P-561', name: 'Camila Torres', age: 19, acuity: 1, wait: 29, bedType: 'General' })], doctors: 8, nurses: 18, icuOutage: 0, history: { labels: ['08:00'], waits: [12], utilization: [53] }, nextId: 600 };
 }
 
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
@@ -56,9 +56,6 @@ function sortedQueue() { return [...state.queue].sort((a, b) => getPriority(b) -
 
 function render() {
   renderStats(); renderFloorPlan(); renderQueue(); renderChart(); renderDoctorPortal(); renderPatientPortal();
-  $('#simulationClock').textContent = formatClock(state.clockMinutes);
-  $('#simulationStatus').textContent = state.running ? `Running · ${state.speed}x` : state.elapsed ? 'Paused' : 'Ready';
-  $('#strategySelect').value = state.strategy;
   $('#insightText').textContent = state.strategy === 'c' ? 'Current run is protected against patient starvation.' : 'Switch to Strategy C to activate starvation prevention.';
 }
 
@@ -86,6 +83,7 @@ function renderPatientPortal() {
 function dischargePatient(bedId) { const bed = state.beds.find((item) => item.id === bedId); if (!bed || !bed.patient) return; const name = bed.patient.name; bed.patient = null; render(); showToast(`${name} discharged. ${bedId} is now available.`); }
 
 function switchRole(role) { activeRole = role; $('#portalSelector').hidden = true; $('.topbar').hidden = false; $('#staffView').hidden = role !== 'staff'; $('#doctorView').hidden = role !== 'doctor'; $('#patientView').hidden = role !== 'patient'; if (role === 'staff' && telemetryChart) telemetryChart.resize(); render(); }
+function openPatientCheckin() { switchRole('patient'); $('#patientCheckinForm input[name="name"]').focus(); }
 function showPortalSelector() { activeRole = null; $('#portalSelector').hidden = false; $('.topbar').hidden = true; $('#staffView').hidden = true; $('#doctorView').hidden = true; $('#patientView').hidden = true; }
 
 function renderStats() {
@@ -102,7 +100,21 @@ function renderFloorPlan() {
 }
 
 function renderQueue() {
-  const queue = sortedQueue(); $('#queueCount').textContent = `${state.queue.length} waiting`; $('#queueList').innerHTML = queue.length ? queue.map((patient) => { const badge = getBadge(patient); return `<div class="queue-item"><div class="queue-avatar">${initials(patient.name)}</div><div class="queue-main"><strong>${patient.name}</strong><div class="queue-meta"><span>${patient.id}</span><span>Age ${patient.age}</span><span class="triage-badge ${badge.className}">${badge.label}</span></div></div><div class="queue-side"><strong class="queue-score">${Math.round(getPriority(patient))}</strong><span class="queue-wait">${patient.wait} min wait</span></div></div>`; }).join('') : '<div class="queue-empty"><div><strong>Queue clear</strong><p>No patients waiting for triage.</p></div></div>';
+  const queue = sortedQueue(); $('#queueCount').textContent = `${state.queue.length} waiting`; $('#queueList').innerHTML = queue.length ? queue.map((patient) => { const badge = getBadge(patient); return `<div class="queue-item"><div class="queue-avatar">${initials(patient.name)}</div><div class="queue-main"><strong>${patient.name}</strong><div class="queue-meta"><span>${patient.id}</span><span>Age ${patient.age}</span><span class="triage-badge ${badge.className}">${badge.label}</span></div><small class="queue-concern">${patient.concern}</small></div><div class="queue-side"><strong class="queue-score">${Math.round(getPriority(patient))}</strong><span class="queue-wait">${patient.wait} min wait</span></div></div>`; }).join('') : '<div class="queue-empty"><div><strong>Queue clear</strong><p>No patients waiting for triage.</p></div></div>';
+}
+
+function addPatientFromCheckin(event) {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const acuity = Number(form.get('urgency'));
+  const wait = Math.max(5, state.queue.length * 3 + (6 - acuity) * 2);
+  const patient = createPatient({ id: `P-${state.nextId++}`, name: String(form.get('name')).trim(), age: Number(form.get('age')), concern: String(form.get('concern')).trim(), acuity, wait });
+  state.queue.push(patient);
+  event.currentTarget.reset();
+  render();
+  $('#patientSelect').value = patient.id;
+  renderPatientPortal();
+  showToast(`${patient.name} joined the live care queue.`);
 }
 
 function renderChart() { if (!telemetryChart) return; telemetryChart.data.labels = state.history.labels; telemetryChart.data.datasets[0].data = state.history.waits; telemetryChart.data.datasets[1].data = state.history.utilization; telemetryChart.update('none'); }
@@ -124,30 +136,108 @@ function openBedModal(bed) { const patient = bed.patient; $('#modalBedLabel').te
 function closeModals() { $$('.modal-backdrop').forEach((modal) => { modal.hidden = true; }); }
 function showToast(message) { const toast = $('#toast'); toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2800); }
 
-function loadDataset() { const names = ['Harper Lewis', 'Michael Young', 'Zoe King', 'Andre Brown', 'Luna Flores', 'Henry Green', 'Layla Adams', 'Owen Baker', 'Mila Nelson', 'Isaac Hall']; state.queue = Array.from({ length: 50 }, (_, index) => createPatient({ id: `ED-${String(index + 1).padStart(2, '0')}`, name: `${names[index % names.length]} ${Math.floor(index / names.length) + 1}`, age: randomInt(18, 89), acuity: index < 7 ? 5 : index < 20 ? 4 : randomInt(1, 3), wait: randomInt(0, 8), bedType: index < 7 ? 'ICU' : index < 25 ? 'Emergency' : 'General' })); render(); showToast('50 anonymized emergency records loaded into triage.'); }
-function addCustomPatient(event) { event.preventDefault(); const form = new FormData(event.currentTarget); state.queue.push(createPatient({ id: `P-${state.nextId++}`, name: form.get('name'), age: Number(form.get('age')), acuity: Number(form.get('acuity')), bedType: form.get('bedType') })); event.currentTarget.reset(); $('#customModal').hidden = true; render(); showToast('Patient added to the live triage queue.'); }
+function initScene() {
+  if (!window.THREE) return;
+  const canvas = $('#sceneCanvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' });
+  } catch (error) {
+    canvas.hidden = true;
+    return;
+  }
+  const core = new THREE.Group();
+  const rings = [];
+  const nodes = [];
+  const blue = new THREE.Color('#2B7BB9');
+  const red = new THREE.Color('#B0122B');
+  const teal = new THREE.Color('#12807C');
+  const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  camera.position.set(0, 0, 8.5);
+  scene.add(core);
+  core.position.set(2.1, 0.1, 0);
+  core.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.05, 1), new THREE.MeshBasicMaterial({ color: blue, wireframe: true, transparent: true, opacity: .3 })));
+  [1.35, 1.7, 2.05].forEach((radius, index) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(radius, .012 + index * .006, 6, 72), new THREE.MeshBasicMaterial({ color: index === 1 ? teal : blue, transparent: true, opacity: .55 - index * .1 }));
+    ring.rotation.set(index * .65, index * .42, index * .25);
+    core.add(ring);
+    rings.push(ring);
+  });
+  const particlePositions = new Float32Array(42 * 3);
+  for (let index = 0; index < 42; index += 1) {
+    const radius = 1.3 + Math.random() * .95;
+    const angle = Math.random() * Math.PI * 2;
+    particlePositions[index * 3] = Math.cos(angle) * radius;
+    particlePositions[index * 3 + 1] = (Math.random() - .5) * 2.5;
+    particlePositions[index * 3 + 2] = Math.sin(angle) * radius;
+    const node = new THREE.Mesh(new THREE.SphereGeometry(.035 + Math.random() * .025, 6, 6), new THREE.MeshBasicMaterial({ color: index % 7 === 0 ? red : teal, transparent: true, opacity: .85 }));
+    node.position.set(particlePositions[index * 3], particlePositions[index * 3 + 1], particlePositions[index * 3 + 2]);
+    core.add(node);
+    nodes.push(node);
+  }
+
+  function resize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setSize(width, height, false);
+  }
+
+  function handlePointer(event) {
+    pointer.targetX = (event.clientX / window.innerWidth - .5) * .45;
+    pointer.targetY = (event.clientY / window.innerHeight - .5) * .3;
+  }
+
+  function animate(time) {
+    const seconds = time * .001;
+    const scrollProgress = Math.min(window.scrollY / Math.max(document.body.scrollHeight - window.innerHeight, 1), 1);
+    const pulse = (Math.sin(seconds * 2.4) + 1) / 2;
+    const pulseColor = blue.clone().lerp(red, Math.pow(pulse, 7));
+    pointer.x += (pointer.targetX - pointer.x) * .04;
+    pointer.y += (pointer.targetY - pointer.y) * .04;
+    core.rotation.y += reducedMotion ? 0 : .0018;
+    core.rotation.x += reducedMotion ? 0 : .0007;
+    core.rotation.y += scrollProgress * .001;
+    core.rotation.x += pointer.y * .002;
+    core.rotation.z = pointer.x * .08;
+    core.scale.setScalar(1 + pulse * .045);
+    core.position.y = .1 - scrollProgress * .5 + pointer.y * .35;
+    camera.position.x += ((2.1 - scrollProgress * .8 + pointer.x) - camera.position.x) * .025;
+    camera.position.y += ((scrollProgress * .35 - pointer.y) - camera.position.y) * .025;
+    rings.forEach((ring, index) => { ring.rotation.z += (index + 1) * .0015; ring.material.color.copy(index === 1 ? teal : pulse > .92 ? pulseColor : blue); });
+    nodes.forEach((node, index) => { node.position.y += Math.sin(seconds * 1.2 + index) * .0006; node.material.color.copy(index % 7 === 0 && pulse > .7 ? pulseColor : teal); });
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+  window.addEventListener('pointermove', handlePointer, { passive: true });
+  requestAnimationFrame(animate);
+}
 
 function initChart() { const ctx = $('#telemetryChart'); telemetryChart = new Chart(ctx, { type: 'line', data: { labels: state.history.labels, datasets: [{ label: 'Average wait time', data: state.history.waits, borderColor: '#2B7BB9', backgroundColor: 'rgba(43,123,185,.08)', tension: .4, fill: true, pointRadius: 2, pointBackgroundColor: '#2B7BB9' }, { label: 'Bed utilization %', data: state.history.utilization, borderColor: '#12807C', backgroundColor: 'transparent', tension: .4, pointRadius: 2, pointBackgroundColor: '#12807C' }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#14324F', padding: 10, titleFont: { family: 'DM Sans' }, bodyFont: { family: 'DM Sans' } } }, scales: { x: { grid: { display: false }, ticks: { color: '#718397', font: { size: 10 } } }, y: { beginAtZero: true, suggestedMax: 100, grid: { color: '#edf1f3' }, ticks: { color: '#718397', font: { size: 10 } } } } } }); }
 
 function bindEvents() {
   $$('[data-role]').forEach((card) => card.addEventListener('click', () => switchRole(card.dataset.role)));
+  $('#landingCheckinBtn').addEventListener('click', openPatientCheckin);
+  $('#patientCheckinBtn').addEventListener('click', openPatientCheckin);
   $('#switchPortal').addEventListener('click', showPortalSelector);
   $('#patientSelect').addEventListener('change', renderPatientPortal);
-  $('#startBtn').addEventListener('click', () => { state.running = true; clearInterval(timerId); timerId = setInterval(tick, 1000); render(); });
-  $('#pauseBtn').addEventListener('click', () => { state.running = false; clearInterval(timerId); render(); });
-  $('#stepBtn').addEventListener('click', () => { const patient = createPatient({ id: `P-${state.nextId++}` }); state.queue.push(patient); tick(); showToast(`${patient.name} joined triage with acuity ${patient.acuity}.`); });
-  $('#resetBtn').addEventListener('click', () => { clearInterval(timerId); state = createInitialState(); render(); showToast('Simulation reset to baseline conditions.'); });
-  $$('.segment').forEach((button) => button.addEventListener('click', () => { $$('.segment').forEach((item) => item.classList.remove('active')); button.classList.add('active'); state.speed = Number(button.dataset.speed); render(); }));
-  $('#strategySelect').addEventListener('change', (event) => { state.strategy = event.target.value; render(); showToast(`Prioritization changed to Strategy ${event.target.value.toUpperCase()}.`); });
-  $('#customPatientBtn').addEventListener('click', () => { $('#customModal').hidden = false; }); $('#datasetBtn').addEventListener('click', loadDataset); $('#customForm').addEventListener('submit', addCustomPatient);
-  $('#surgeBtn').addEventListener('click', () => { for (let i = 0; i < 8; i += 1) state.queue.push(createPatient({ id: `SURGE-${state.nextId++}`, acuity: i < 3 ? 5 : 4, bedType: i < 3 ? 'ICU' : 'Emergency' })); render(); showToast('Ambulance surge simulated: 8 emergency cases added.'); });
-  $('#shortageBtn').addEventListener('click', () => { state.doctors = Math.max(2, state.doctors - 4); render(); showToast('Staff shortage active: 4 doctors unavailable.'); });
-  $('#outageBtn').addEventListener('click', () => { state.icuOutage = Math.min(3, state.icuOutage + 3); render(); showToast('ICU equipment outage active: 3 beds offline.'); });
+  $('#patientCheckinForm').addEventListener('submit', addPatientFromCheckin);
   $$('[data-close-modal]').forEach((button) => button.addEventListener('click', closeModals)); $$('.modal-backdrop').forEach((backdrop) => backdrop.addEventListener('click', (event) => { if (event.target === backdrop) closeModals(); }));
 }
 
 state = createInitialState();
 initChart();
 bindEvents();
+initScene();
 showPortalSelector();
 render();
+setInterval(tick, 1000);

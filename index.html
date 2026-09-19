@@ -9,10 +9,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body>
+  <canvas class="scene-canvas" id="sceneCanvas" aria-hidden="true"></canvas>
   <section class="portal-selector" id="portalSelector">
     <div class="portal-hero">
       <div class="brand-lockup portal-brand">
@@ -20,6 +22,7 @@
         <div><p class="eyebrow">Smart hospital simulator</p><h1>MEDFLOW</h1></div>
       </div>
       <div class="portal-copy"><p class="eyebrow teal-text">Welcome to the care network</p><h2>Select Your Portal to Enter MEDFLOW</h2><p>Choose the view that fits your role. No password needed.</p></div>
+      <button class="landing-checkin" id="landingCheckinBtn">Patient Check-in <span>→</span></button>
     </div>
     <div class="role-grid">
       <button class="role-card doctor-role" data-role="doctor"><span class="role-icon">👨‍⚕️</span><span><strong>Doctor Portal</strong><small>View my assigned patients, vitals, and treatment plans</small></span><b>Enter portal <i>→</i></b></button>
@@ -36,45 +39,13 @@
         <h1>MEDFLOW <span>: Smart Hospital Simulator</span></h1>
       </div>
     </div>
-    <div class="clock-cluster">
-      <span class="live-dot"></span>
-      <div>
-        <p class="eyebrow">Simulation clock</p>
-        <strong id="simulationClock">08:00</strong>
-      </div>
-      <span class="simulation-status" id="simulationStatus">Ready</span>
+    <div class="topbar-actions">
+      <button class="patient-checkin-nav" id="patientCheckinBtn">Patient Check-in</button>
       <button class="switch-portal" id="switchPortal">⇄ Switch Portal / Sign Out</button>
     </div>
   </header>
 
   <main class="app-shell staff-view" id="staffView">
-    <section class="control-panel panel" aria-label="Simulation controls">
-      <div class="control-main">
-        <div class="button-row">
-          <button class="button button-primary" id="startBtn">▶ Start Simulation</button>
-          <button class="button button-secondary" id="pauseBtn">⏸ Pause</button>
-          <button class="button button-secondary" id="stepBtn">⚡ Step (+1 Patient)</button>
-          <button class="button button-quiet" id="resetBtn">↻ Reset Simulation</button>
-        </div>
-        <div class="speed-control">
-          <span class="control-label">Simulation speed</span>
-          <div class="segmented" role="group" aria-label="Simulation speed">
-            <button class="segment active" data-speed="1">1x</button>
-            <button class="segment" data-speed="5">5x</button>
-            <button class="segment" data-speed="10">10x</button>
-          </div>
-        </div>
-      </div>
-      <div class="strategy-control">
-        <label for="strategySelect" class="control-label">Active prioritization strategy</label>
-        <select id="strategySelect">
-          <option value="a">Strategy A: First-Come, First-Served</option>
-          <option value="b">Strategy B: Traditional Urgency (Triage Acuity Only)</option>
-          <option value="c" selected>Strategy C: MEDFLOW Dynamic MODPO (Urgency + Starvation Prevention + Deterioration Risk)</option>
-        </select>
-      </div>
-    </section>
-
     <section class="stat-grid" aria-label="Hospital vital statistics">
       <article class="stat-card">
         <div class="stat-top"><span class="stat-icon mint-icon">⌂</span><span class="trend positive">+2 beds</span></div>
@@ -114,21 +85,8 @@
           <span class="queue-count" id="queueCount">0 waiting</span>
         </div>
         <div class="queue-list" id="queueList"></div>
-        <div class="queue-actions">
-          <button class="button button-primary wide" id="customPatientBtn">＋ Admit Custom Patient</button>
-          <button class="button button-outline wide" id="datasetBtn">▣ Load Real-World Dataset (50 Emergency Patients)</button>
-        </div>
       </section>
     </div>
-
-    <section class="stress-section">
-      <div class="section-heading"><div><p class="eyebrow red-text">Scenario lab</p><h2>Chaos &amp; stress-testing deck</h2></div><span class="section-note">Test the system's resilience</span></div>
-      <div class="stress-grid">
-        <button class="stress-card surge" id="surgeBtn"><span class="stress-symbol">🚨</span><span><strong>Ambulance surge</strong><small>+8 emergency cases</small></span><b>→</b></button>
-        <button class="stress-card shortage" id="shortageBtn"><span class="stress-symbol">⚕</span><span><strong>Staff shortage</strong><small>-4 doctors on duty</small></span><b>→</b></button>
-        <button class="stress-card outage" id="outageBtn"><span class="stress-symbol">⚡</span><span><strong>ICU equipment outage</strong><small>-3 ICU beds available</small></span><b>→</b></button>
-      </div>
-    </section>
 
     <section class="telemetry-grid">
       <article class="panel chart-panel">
@@ -154,6 +112,16 @@
 
   <main class="role-shell patient-view" id="patientView" hidden>
     <section class="patient-welcome"><p class="eyebrow teal-text">Patient &amp; family access</p><h2>Your care, clearly explained.</h2><p>Follow your place in the live hospital queue with simple, up-to-date information.</p></section>
+    <section class="checkin-panel panel">
+      <div class="section-heading"><div><p class="eyebrow teal-text">New patient entry</p><h2>Check in for care</h2></div><span class="section-note">A few quick details help us place you correctly.</span></div>
+      <form class="checkin-form" id="patientCheckinForm">
+        <label>Patient name<input name="name" required placeholder="e.g. Alex Morgan" /></label>
+        <label>Age<input name="age" type="number" min="1" max="120" required placeholder="Age" /></label>
+        <label class="checkin-wide">Main concern / complaint<textarea name="concern" required rows="2" placeholder="Chest pain, fever, sprained ankle..."></textarea></label>
+        <fieldset class="urgency-field"><legend>Urgency level</legend><label><input type="radio" name="urgency" value="1" checked /> <span>🟢 Routine</span></label><label><input type="radio" name="urgency" value="3" /> <span>🟡 Urgent</span></label><label><input type="radio" name="urgency" value="5" /> <span>🔴 Critical</span></label></fieldset>
+        <button class="button button-primary checkin-submit" type="submit">Submit / Join Queue</button>
+      </form>
+    </section>
     <section class="patient-selector panel"><label for="patientSelect">Select Patient</label><select id="patientSelect"></select></section>
     <section class="patient-status-card" id="patientStatusCard"></section>
     <div class="assurance-badge"><span>✓</span><strong>Prioritized dynamically using MedFlow fair triage standards.</strong></div>
@@ -167,17 +135,6 @@
       <div class="vitals-grid"><div><span>Heart rate</span><strong id="modalHeartRate">112 <small>BPM</small></strong></div><div><span>Oxygen saturation</span><strong id="modalSpo2">94<small>% SpO2</small></strong></div><div><span>Assigned doctor</span><strong class="small-value" id="modalDoctor">Dr. Chen</strong></div><div><span>Treatment time left</span><strong id="modalTreatment">42 <small>min</small></strong></div></div>
       <div class="modal-note">Vitals refresh automatically while the simulation is running.</div>
     </div>
-  </div>
-
-  <div class="modal-backdrop" id="customModal" hidden>
-    <form class="modal form-modal" id="customForm">
-      <button type="button" class="modal-close" data-close-modal aria-label="Close custom patient form">×</button>
-      <div class="modal-kicker">NEW INTAKE</div><h2>Admit custom patient</h2><p class="form-intro">Add a patient to the live triage queue.</p>
-      <label>Patient name<input name="name" required placeholder="e.g. Alex Morgan" /></label>
-      <div class="form-row"><label>Age<input name="age" type="number" min="1" max="120" value="38" required /></label><label>Acuity (1-5)<select name="acuity"><option value="5">5 · Critical</option><option value="4">4 · Urgent</option><option value="3" selected>3 · Serious</option><option value="2">2 · Stable</option><option value="1">1 · Routine</option></select></label></div>
-      <label>Bed type<select name="bedType"><option value="Emergency">Emergency Ward</option><option value="ICU">Intensive Care Unit</option><option value="General">General Ward</option></select></label>
-      <button class="button button-primary wide" type="submit">Add to triage queue</button>
-    </form>
   </div>
 
   <div class="toast" id="toast" role="status"></div>
