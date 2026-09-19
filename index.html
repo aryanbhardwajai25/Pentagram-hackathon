@@ -15,19 +15,36 @@
 </head>
 <body>
   <canvas class="scene-canvas" id="sceneCanvas" aria-hidden="true"></canvas>
+  <div class="modal-backdrop sign-in-backdrop" id="signInModal" hidden>
+    <section class="sign-in-modal" role="dialog" aria-modal="true" aria-labelledby="signInTitle">
+      <button class="modal-close" id="closeSignIn" type="button" aria-label="Close sign in">×</button>
+      <p class="eyebrow teal-text" id="signInRoleLabel">Secure portal access</p>
+      <h2 id="signInTitle">Sign in to MEDFLOW</h2>
+      <p class="sign-in-copy">Enter your details to continue to the selected portal.</p>
+      <form id="signInForm">
+        <label for="signInName">Name<input id="signInName" name="name" list="doctorNames" required autocomplete="name" placeholder="Enter your name" /></label>
+        <datalist id="doctorNames"><option value="Dr. Sarah Rao"></option><option value="Dr. Marcus Vance"></option><option value="Dr. Ananya Patel"></option><option value="Dr. David Kim"></option><option value="Dr. Elena Gomez"></option></datalist>
+        <label for="signInPassword">Password<input id="signInPassword" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password" /></label>
+        <label for="captchaInput">CAPTCHA <span class="captcha-code" id="captchaCode"></span><input id="captchaInput" name="captcha" required autocomplete="off" placeholder="Type the code above" /></label>
+        <p class="sign-in-error" id="signInError" role="alert" hidden></p>
+        <button class="button button-primary wide" type="submit">Sign In</button>
+      </form>
+      <p class="demo-credentials" id="demoCredentials">Demo access: use the password provided for your portal.</p>
+    </section>
+  </div>
   <section class="portal-selector" id="portalSelector">
     <div class="portal-hero">
       <div class="brand-lockup portal-brand">
         <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
         <div><p class="eyebrow">Smart hospital simulator</p><h1>MEDFLOW</h1></div>
       </div>
-      <div class="portal-copy"><p class="eyebrow teal-text">Welcome to the care network</p><h2>Select Your Portal to Enter MEDFLOW</h2><p>Select a portal to view live resources and workflows.</p></div>
-      <button class="landing-checkin" id="landingCheckinBtn">Patient Check-in <span>→</span></button>
+      <div class="portal-copy"><p class="eyebrow teal-text">Welcome to the care network</p><h2>Select Your Portal to Enter MEDFLOW</h2><p>Select a portal and sign in to view live resources and workflows.</p></div>
+      <button class="landing-checkin" id="landingCheckinBtn">Existing Patient Login <span>→</span></button>
     </div>
     <div class="role-grid">
       <button class="role-card doctor-role" data-role="doctor"><span class="role-icon">👨‍⚕️</span><span><strong>Doctor Portal</strong><small>View my assigned patients, vitals, and treatment plans</small></span><b>Enter portal <i>→</i></b></button>
       <button class="role-card staff-role" data-role="staff"><span class="role-icon">🏥</span><span><strong>Hospital Operations / Staff</strong><small>Full bed matrix, resource allocation, and chaos simulation</small></span><b>Enter portal <i>→</i></b></button>
-      <button class="role-card patient-role" data-role="patient"><span class="role-icon">🧑‍🦽</span><span><strong>Patient &amp; Family Portal</strong><small>Check current wait time, queue rank, and care status</small></span><b>Enter portal <i>→</i></b></button>
+      <button class="role-card patient-role" data-role="patient" data-entry-mode="new"><span class="role-icon">🧑‍🦽</span><span><strong>New Patient Admission</strong><small>Enter hospital details and request a new care admission</small></span><b>Start admission <i>→</i></b></button>
     </div>
     <p class="portal-footnote"><span>●</span> Demo environment · All information is simulated</p>
   </section>
@@ -46,7 +63,6 @@
   </header>
 
   <main class="app-shell staff-view" id="staffView">
-    <div class="staff-data-actions"><button class="button button-quiet" id="resetDataBtn" type="button">Reset to Default Data</button></div>
     <section class="stat-grid" aria-label="Hospital vital statistics">
       <article class="stat-card">
         <div class="stat-top"><span class="stat-icon mint-icon">⌂</span><span class="trend positive">+2 beds</span></div>
@@ -106,25 +122,31 @@
   </main>
 
   <main class="role-shell doctor-view" id="doctorView" hidden>
-    <section class="role-heading panel"><div><p class="eyebrow teal-text">Clinical workspace</p><h2>Dr. Sarah Rao <span>— Emergency &amp; Critical Care</span></h2><p>Good morning, Doctor. Here are your active patients and their live care signals.</p></div><div class="role-live"><i></i>Live clinical feed</div></section>
-    <section class="doctor-summary"><div class="summary-chip"><strong id="doctorPatientCount">0</strong><span>assigned patients</span></div><div class="summary-chip"><strong id="doctorCriticalCount">0</strong><span>critical cases</span></div><div class="summary-chip"><strong id="doctorAvailableCount">0</strong><span>open follow-ups</span></div></section>
+    <section class="role-heading panel"><div><p class="eyebrow teal-text">Private clinical workspace</p><h2 id="doctorHeading">Dr. Sarah Rao <span>— Emergency &amp; Critical Care</span></h2><p id="doctorGreeting">Good morning, Doctor. Here are your active patients and their live care signals.</p></div><div class="doctor-heading-actions"><div class="doctor-private-label">Private doctor view</div><div class="role-live"><i></i>Live clinical feed</div></div></section>
+    <section class="doctor-summary"><div class="summary-chip"><strong id="doctorPatientCount">0</strong><span>Active Patients</span></div><div class="summary-chip"><strong id="doctorCriticalCount">0</strong><span>Critical Status</span></div><div class="summary-chip"><strong id="doctorAvailableCount">0</strong><span>Open Follow-ups</span></div></section>
     <section><div class="section-heading"><div><p class="eyebrow blue-text">My caseload</p><h2>My Active Patients</h2></div></div><div class="doctor-grid" id="doctorPatientGrid"></div></section>
   </main>
 
   <main class="role-shell patient-view" id="patientView" hidden>
-    <section class="patient-welcome"><p class="eyebrow teal-text">Patient &amp; family access</p><h2>Your care, clearly explained.</h2><p>Follow your place in the live hospital queue with simple, up-to-date information.</p></section>
-    <section class="checkin-panel panel">
-      <div class="section-heading"><div><p class="eyebrow teal-text">New patient entry</p><h2>Check in for care</h2></div><span class="section-note">A few quick details help us place you correctly.</span></div>
+    <section class="patient-welcome"><div class="patient-private-label" id="patientPrivateLabel">Private patient view</div><p class="eyebrow teal-text" id="patientPortalLabel">Patient &amp; family access</p><h2 id="patientPortalHeading">Your care, clearly explained.</h2><p id="patientPortalDescription">Follow your place in the live hospital queue with simple, up-to-date information.</p></section>
+    <section class="checkin-panel panel" id="patientSignupPanel">
+      <div class="section-heading"><div><p class="eyebrow teal-text">New patient sign-up</p><h2>Create your patient profile</h2></div><span class="section-note">Basic hospital details help us place you correctly.</span></div>
       <form class="checkin-form" id="patientCheckinForm">
         <label>Patient name<input name="name" required placeholder="e.g. Alex Morgan" /></label>
         <label>Age<input name="age" type="number" min="1" max="120" required placeholder="Age" /></label>
+        <label>Set password<input name="patientPassword" type="password" placeholder="Create a password" /></label>
+        <label>Phone number<input name="phone" type="tel" required placeholder="e.g. (555) 010-2040" /></label>
+        <label>Emergency contact<input name="emergencyContact" required placeholder="Name and phone" /></label>
+        <label class="checkin-wide">Home address<input name="address" required placeholder="Street, city, state" /></label>
+        <label>Insurance provider<input name="insurance" required placeholder="Provider or self-pay" /></label>
         <label class="checkin-wide">Main concern / complaint<textarea name="concern" required rows="2" placeholder="Chest pain, fever, sprained ankle..."></textarea></label>
         <fieldset class="urgency-field"><legend>Urgency level</legend><label><input type="radio" name="urgency" value="1" checked /> <span>🟢 Routine</span></label><label><input type="radio" name="urgency" value="3" /> <span>🟡 Urgent</span></label><label><input type="radio" name="urgency" value="5" /> <span>🔴 Critical</span></label></fieldset>
-        <button class="button button-primary checkin-submit" type="submit">Submit / Join Queue</button>
+        <button class="button button-primary checkin-submit" type="submit">Sign Up / Join Queue</button>
       </form>
     </section>
-    <section class="patient-selector panel"><label for="patientSelect">Select Patient</label><select id="patientSelect"></select></section>
+    <section class="patient-selector panel" id="patientSelector"><label for="patientSelect">Select Patient</label><select id="patientSelect"></select></section>
     <section class="patient-status-card" id="patientStatusCard"></section>
+    <section class="patient-directory-section" id="patientDirectorySection"><div class="section-heading"><div><p class="eyebrow blue-text">Patient directory</p><h2>Patient profiles and activity</h2></div><span class="section-note">35 demo profiles plus new sign-ups</span></div><div class="patient-directory" id="patientDirectory"></div></section>
     <div class="assurance-badge"><span>✓</span><strong>Prioritized dynamically using MedFlow fair triage standards.</strong></div>
   </main>
 
