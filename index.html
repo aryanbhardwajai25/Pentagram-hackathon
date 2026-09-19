@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#14324F" />
+  <title>MEDFLOW | Smart Hospital Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <section class="portal-selector" id="portalSelector">
+    <div class="portal-hero">
+      <div class="brand-lockup portal-brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div><p class="eyebrow">Smart hospital simulator</p><h1>MEDFLOW</h1></div>
+      </div>
+      <div class="portal-copy"><p class="eyebrow teal-text">Welcome to the care network</p><h2>Select Your Portal to Enter MEDFLOW</h2><p>Choose the view that fits your role. No password needed.</p></div>
+    </div>
+    <div class="role-grid">
+      <button class="role-card doctor-role" data-role="doctor"><span class="role-icon">👨‍⚕️</span><span><strong>Doctor Portal</strong><small>View my assigned patients, vitals, and treatment plans</small></span><b>Enter portal <i>→</i></b></button>
+      <button class="role-card staff-role" data-role="staff"><span class="role-icon">🏥</span><span><strong>Hospital Operations / Staff</strong><small>Full bed matrix, resource allocation, and chaos simulation</small></span><b>Enter portal <i>→</i></b></button>
+      <button class="role-card patient-role" data-role="patient"><span class="role-icon">🧑‍🦽</span><span><strong>Patient &amp; Family Portal</strong><small>Check current wait time, queue rank, and care status</small></span><b>Enter portal <i>→</i></b></button>
+    </div>
+    <p class="portal-footnote"><span>●</span> Demo environment · All information is simulated</p>
+  </section>
+  <header class="topbar">
+    <div class="brand-lockup">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div>
+        <p class="eyebrow">Operations command center</p>
+        <h1>MEDFLOW <span>: Smart Hospital Simulator</span></h1>
+      </div>
+    </div>
+    <div class="clock-cluster">
+      <span class="live-dot"></span>
+      <div>
+        <p class="eyebrow">Simulation clock</p>
+        <strong id="simulationClock">08:00</strong>
+      </div>
+      <span class="simulation-status" id="simulationStatus">Ready</span>
+      <button class="switch-portal" id="switchPortal">⇄ Switch Portal / Sign Out</button>
+    </div>
+  </header>
+
+  <main class="app-shell staff-view" id="staffView">
+    <section class="control-panel panel" aria-label="Simulation controls">
+      <div class="control-main">
+        <div class="button-row">
+          <button class="button button-primary" id="startBtn">▶ Start Simulation</button>
+          <button class="button button-secondary" id="pauseBtn">⏸ Pause</button>
+          <button class="button button-secondary" id="stepBtn">⚡ Step (+1 Patient)</button>
+          <button class="button button-quiet" id="resetBtn">↻ Reset Simulation</button>
+        </div>
+        <div class="speed-control">
+          <span class="control-label">Simulation speed</span>
+          <div class="segmented" role="group" aria-label="Simulation speed">
+            <button class="segment active" data-speed="1">1x</button>
+            <button class="segment" data-speed="5">5x</button>
+            <button class="segment" data-speed="10">10x</button>
+          </div>
+        </div>
+      </div>
+      <div class="strategy-control">
+        <label for="strategySelect" class="control-label">Active prioritization strategy</label>
+        <select id="strategySelect">
+          <option value="a">Strategy A: First-Come, First-Served</option>
+          <option value="b">Strategy B: Traditional Urgency (Triage Acuity Only)</option>
+          <option value="c" selected>Strategy C: MEDFLOW Dynamic MODPO (Urgency + Starvation Prevention + Deterioration Risk)</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="stat-grid" aria-label="Hospital vital statistics">
+      <article class="stat-card">
+        <div class="stat-top"><span class="stat-icon mint-icon">⌂</span><span class="trend positive">+2 beds</span></div>
+        <p class="card-label">Total available beds</p>
+        <div class="stat-value" id="bedStat">18 <small>/ 38 free</small></div>
+        <div class="progress-track"><div class="progress-fill teal-fill" id="bedProgress"></div></div>
+        <p class="stat-foot" id="bedFoot">52.6% capacity available</p>
+      </article>
+      <article class="stat-card">
+        <div class="stat-top"><span class="stat-icon blue-icon">◷</span><span class="trend neutral" id="waitTrend">Live</span></div>
+        <p class="card-label">Average patient wait time</p>
+        <div class="stat-value" id="waitStat">12 <small>mins</small></div>
+        <div class="mini-sparkline" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <p class="stat-foot" id="waitFoot">Target under 30 minutes</p>
+      </article>
+      <article class="stat-card">
+        <div class="stat-top"><span class="stat-icon navy-icon">+</span><span class="trend positive">On duty</span></div>
+        <p class="card-label">Active medical staff</p>
+        <div class="staff-value"><strong id="doctorStat">8 <small>/ 10</small></strong><span>Doctors</span><strong id="nurseStat">18 <small>/ 20</small></strong><span>Nurses</span></div>
+        <p class="stat-foot" id="staffFoot">Full clinical coverage</p>
+      </article>
+    </section>
+
+    <div class="dashboard-grid">
+      <section class="panel floor-panel">
+        <div class="section-heading">
+          <div><p class="eyebrow teal-text">Live capacity map</p><h2>Hospital floor plan</h2></div>
+          <div class="legend"><span><i class="legend-dot free"></i>Free</span><span><i class="legend-dot treatment"></i>In-treatment</span><span><i class="legend-dot critical"></i>Critical</span></div>
+        </div>
+        <div class="floor-plan" id="floorPlan"></div>
+        <div class="floor-summary"><span><strong id="occupiedCount">20</strong> occupied beds</span><span><strong id="criticalCount">3</strong> critical cases</span><span>Click a bed for patient detail</span></div>
+      </section>
+
+      <section class="panel queue-panel">
+        <div class="section-heading queue-heading">
+          <div><p class="eyebrow blue-text">Intake coordination</p><h2>Live patient queue</h2></div>
+          <span class="queue-count" id="queueCount">0 waiting</span>
+        </div>
+        <div class="queue-list" id="queueList"></div>
+        <div class="queue-actions">
+          <button class="button button-primary wide" id="customPatientBtn">＋ Admit Custom Patient</button>
+          <button class="button button-outline wide" id="datasetBtn">▣ Load Real-World Dataset (50 Emergency Patients)</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="stress-section">
+      <div class="section-heading"><div><p class="eyebrow red-text">Scenario lab</p><h2>Chaos &amp; stress-testing deck</h2></div><span class="section-note">Test the system's resilience</span></div>
+      <div class="stress-grid">
+        <button class="stress-card surge" id="surgeBtn"><span class="stress-symbol">🚨</span><span><strong>Ambulance surge</strong><small>+8 emergency cases</small></span><b>→</b></button>
+        <button class="stress-card shortage" id="shortageBtn"><span class="stress-symbol">⚕</span><span><strong>Staff shortage</strong><small>-4 doctors on duty</small></span><b>→</b></button>
+        <button class="stress-card outage" id="outageBtn"><span class="stress-symbol">⚡</span><span><strong>ICU equipment outage</strong><small>-3 ICU beds available</small></span><b>→</b></button>
+      </div>
+    </section>
+
+    <section class="telemetry-grid">
+      <article class="panel chart-panel">
+        <div class="section-heading"><div><p class="eyebrow blue-text">Live telemetry</p><h2>Performance over time</h2></div><span class="chart-live"><i></i>Updating live</span></div>
+        <div class="chart-wrap"><canvas id="telemetryChart"></canvas></div>
+        <div class="chart-legend"><span><i class="line-swatch blue-line"></i>Average wait time</span><span><i class="line-swatch teal-line"></i>Bed utilization %</span></div>
+      </article>
+      <article class="panel insight-panel">
+        <div class="insight-badge">MODPO advantage</div>
+        <h2>Priority that adapts to the patient.</h2>
+        <p>MEDFLOW's Strategy C balances acuity with time in queue and deterioration risk. That keeps routine patients visible before they become emergencies, while preserving a fast lane for the most critical cases.</p>
+        <div class="comparison-table"><div class="comparison-row header"><span>Strategy</span><span>Starvation risk</span><span>Bottlenecks</span></div><div class="comparison-row"><span>A · FCFS</span><strong class="bad">High</strong><strong class="bad">High</strong></div><div class="comparison-row"><span>B · Acuity</span><strong class="warn">Medium</strong><strong class="warn">Medium</strong></div><div class="comparison-row selected"><span>C · MODPO</span><strong class="good">Low</strong><strong class="good">Low</strong></div></div>
+        <div class="insight-footer"><span class="insight-check">✓</span><span id="insightText">Current run is protected against patient starvation.</span></div>
+      </article>
+    </section>
+  </main>
+
+  <main class="role-shell doctor-view" id="doctorView" hidden>
+    <section class="role-heading panel"><div><p class="eyebrow teal-text">Clinical workspace</p><h2>Dr. Sarah Rao <span>— Emergency &amp; Critical Care</span></h2><p>Good morning, Doctor. Here are your active patients and their live care signals.</p></div><div class="role-live"><i></i>Live clinical feed</div></section>
+    <section class="doctor-summary"><div class="summary-chip"><strong id="doctorPatientCount">0</strong><span>assigned patients</span></div><div class="summary-chip"><strong id="doctorCriticalCount">0</strong><span>critical cases</span></div><div class="summary-chip"><strong id="doctorAvailableCount">0</strong><span>open follow-ups</span></div></section>
+    <section><div class="section-heading"><div><p class="eyebrow blue-text">My caseload</p><h2>My Active Patients</h2></div></div><div class="doctor-grid" id="doctorPatientGrid"></div></section>
+  </main>
+
+  <main class="role-shell patient-view" id="patientView" hidden>
+    <section class="patient-welcome"><p class="eyebrow teal-text">Patient &amp; family access</p><h2>Your care, clearly explained.</h2><p>Follow your place in the live hospital queue with simple, up-to-date information.</p></section>
+    <section class="patient-selector panel"><label for="patientSelect">Select Patient</label><select id="patientSelect"></select></section>
+    <section class="patient-status-card" id="patientStatusCard"></section>
+    <div class="assurance-badge"><span>✓</span><strong>Prioritized dynamically using MedFlow fair triage standards.</strong></div>
+  </main>
+
+  <div class="modal-backdrop" id="bedModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bedModalTitle">
+      <button class="modal-close" data-close-modal aria-label="Close patient details">×</button>
+      <div class="modal-kicker" id="modalBedLabel">BED ICU-01</div><h2 id="bedModalTitle">Patient details</h2>
+      <div class="patient-hero"><div class="patient-avatar" id="modalAvatar">JD</div><div><strong id="modalPatientName">Jordan Davis</strong><span id="modalPatientMeta">Age 42 · Critical care</span></div><span class="triage-badge critical" id="modalBadge">Critical</span></div>
+      <div class="vitals-grid"><div><span>Heart rate</span><strong id="modalHeartRate">112 <small>BPM</small></strong></div><div><span>Oxygen saturation</span><strong id="modalSpo2">94<small>% SpO2</small></strong></div><div><span>Assigned doctor</span><strong class="small-value" id="modalDoctor">Dr. Chen</strong></div><div><span>Treatment time left</span><strong id="modalTreatment">42 <small>min</small></strong></div></div>
+      <div class="modal-note">Vitals refresh automatically while the simulation is running.</div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="customModal" hidden>
+    <form class="modal form-modal" id="customForm">
+      <button type="button" class="modal-close" data-close-modal aria-label="Close custom patient form">×</button>
+      <div class="modal-kicker">NEW INTAKE</div><h2>Admit custom patient</h2><p class="form-intro">Add a patient to the live triage queue.</p>
+      <label>Patient name<input name="name" required placeholder="e.g. Alex Morgan" /></label>
+      <div class="form-row"><label>Age<input name="age" type="number" min="1" max="120" value="38" required /></label><label>Acuity (1-5)<select name="acuity"><option value="5">5 · Critical</option><option value="4">4 · Urgent</option><option value="3" selected>3 · Serious</option><option value="2">2 · Stable</option><option value="1">1 · Routine</option></select></label></div>
+      <label>Bed type<select name="bedType"><option value="Emergency">Emergency Ward</option><option value="ICU">Intensive Care Unit</option><option value="General">General Ward</option></select></label>
+      <button class="button button-primary wide" type="submit">Add to triage queue</button>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>
