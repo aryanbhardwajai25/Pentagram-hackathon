@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=2026-09-20-ambulance-50bed" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script src="app.js" defer></script>
+  <script src="app.js?v=2026-09-20-ambulance-50bed" defer></script>
 </head>
 <body>
   <canvas class="scene-canvas" id="sceneCanvas" aria-hidden="true"></canvas>
@@ -67,9 +67,9 @@
       <article class="stat-card">
         <div class="stat-top"><span class="stat-icon mint-icon">⌂</span><span class="trend positive">+2 beds</span></div>
         <p class="card-label">Total available beds</p>
-        <div class="stat-value" id="bedStat">18 <small>/ 38 free</small></div>
+        <div class="stat-value" id="bedStat">32 <small>/ 50 free</small></div>
         <div class="progress-track"><div class="progress-fill teal-fill" id="bedProgress"></div></div>
-        <p class="stat-foot" id="bedFoot">52.6% capacity available</p>
+        <p class="stat-foot" id="bedFoot">36% capacity utilized</p>
       </article>
       <article class="stat-card">
         <div class="stat-top"><span class="stat-icon blue-icon">◷</span><span class="trend neutral" id="waitTrend">Live</span></div>
@@ -86,6 +86,14 @@
       </article>
     </section>
 
+    <section class="panel fleet-panel">
+      <div class="section-heading">
+        <div><p class="eyebrow red-text">Emergency response</p><h2>Ambulance fleet management</h2></div>
+        <span class="queue-count">5 active units</span>
+      </div>
+      <div class="ambulance-grid" id="ambulanceFleet"></div>
+    </section>
+
     <div class="dashboard-grid">
       <section class="panel floor-panel">
         <div class="section-heading">
@@ -93,7 +101,7 @@
           <div class="legend"><span><i class="legend-dot free"></i>Free</span><span><i class="legend-dot treatment"></i>In-treatment</span><span><i class="legend-dot critical"></i>Critical</span></div>
         </div>
         <div class="floor-plan" id="floorPlan"></div>
-        <div class="floor-summary"><span><strong id="occupiedCount">20</strong> occupied beds</span><span><strong id="criticalCount">3</strong> critical cases</span><span>Click a bed for patient detail</span></div>
+        <div class="floor-summary"><span><strong id="occupiedCount">18</strong> occupied beds</span><span><strong id="criticalCount">3</strong> critical cases</span><span>Click a bed for patient detail</span></div>
       </section>
 
       <section class="panel queue-panel">
@@ -146,7 +154,7 @@
     </section>
     <section class="patient-selector panel" id="patientSelector"><label for="patientSelect">Select Patient</label><select id="patientSelect"></select></section>
     <section class="patient-status-card" id="patientStatusCard"></section>
-    <section class="patient-directory-section" id="patientDirectorySection"><div class="section-heading"><div><p class="eyebrow blue-text">Patient directory</p><h2>Patient profiles and activity</h2></div><span class="section-note">35 demo profiles plus new sign-ups</span></div><div class="patient-directory" id="patientDirectory"></div></section>
+    <section class="patient-directory-section" id="patientDirectorySection"><div class="section-heading"><div><p class="eyebrow blue-text">Patient directory</p><h2>Patient profiles and activity</h2></div><span class="section-note">No existing profiles plus new sign-ups</span></div><div class="patient-directory" id="patientDirectory"></div></section>
     <div class="assurance-badge"><span>✓</span><strong>Prioritized dynamically using MedFlow fair triage standards.</strong></div>
   </main>
 
