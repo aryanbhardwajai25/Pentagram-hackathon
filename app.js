@@ -15,6 +15,7 @@ const DOCTOR_ROSTER = [
 ];
 const DOCTORS = DOCTOR_ROSTER.map((doctor) => doctor.name);
 const STORAGE_KEY = 'medflow_patients_data_manual_reset_v3';
+const SYNC_API = '/api';
 const DEFAULT_AMBULANCES = [
   { id: 'AMB-01', status: 'En route', eta: '4 min', district: 'North sector' },
   { id: 'AMB-02', status: 'Available', eta: 'Ready', district: 'City center' },
@@ -31,6 +32,9 @@ let pendingRole = null;
 let patientEntryMode = 'existing';
 let selectedPatientName = '';
 let captchaValue = '';
+let syncReady = false;
+let syncLeader = false;
+let syncToken = '';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -128,8 +132,47 @@ function getPriority(patient) {
 function availableBeds() { return state.beds.filter((bed) => !bed.patient && !isOutageBed(bed)).length; }
 function isOutageBed(bed) { return bed.type === 'ICU' && bed.index >= WARDS.ICU.count - state.icuOutage; }
 function sortedQueue() { return [...state.queue].sort((a, b) => getPriority(b) - getPriority(a)); }
-function saveState() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Storage can be unavailable in restricted browser contexts. */ } }
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Storage can be unavailable in restricted browser contexts. */ }
+  if (syncReady) fetch(`${SYNC_API}/state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state, version: state._version || 0 }) }).catch(() => {});
+}
 function saveStateBeforeClose() { saveState(); }
+
+function applySharedState(sharedState) {
+  if (!sharedState || !Array.isArray(sharedState.beds) || !Array.isArray(sharedState.queue)) return;
+  if ((sharedState._version || 0) < (state?._version || 0)) return;
+  state = normalizeDoctorAssignments(sharedState);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Local cache is optional. */ }
+  render();
+}
+
+async function connectSharedState() {
+  try {
+    const response = await fetch(`${SYNC_API}/state`);
+    if (!response.ok) throw new Error('Shared state unavailable');
+    const payload = await response.json();
+    if (payload.state) applySharedState(payload.state);
+    syncReady = true;
+    if (!payload.state) saveState();
+    const lease = await fetch(`${SYNC_API}/lease`, { method: 'POST' }).then((result) => result.json());
+    syncToken = lease.token || '';
+    syncLeader = Boolean(lease.leader);
+    const events = new EventSource(`${SYNC_API}/events`);
+    events.addEventListener('state', (event) => applySharedState(JSON.parse(event.data)));
+    events.addEventListener('lease', (event) => { syncLeader = JSON.parse(event.data).token === syncToken; });
+    setInterval(async () => {
+      try {
+        const renewed = await fetch(`${SYNC_API}/lease`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: syncToken }) }).then((result) => result.json());
+        syncLeader = Boolean(renewed.leader);
+        syncToken = renewed.token || syncToken;
+      } catch (error) { syncLeader = false; }
+    }, 3000);
+  } catch (error) {
+    syncReady = false;
+    syncLeader = true;
+    showToast('Shared server unavailable. Running in this browser only.');
+  }
+}
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -273,7 +316,7 @@ function renderQueue() {
 
 function addPatientFromCheckin(event) {
   event.preventDefault();
-  if (availableBeds() === 0) { showToast('No beds vacant. New patient entry cannot be completed right now.'); return; }
+  const noBedsAvailable = availableBeds() === 0;
   const form = new FormData(event.currentTarget);
   const acuity = Number(form.get('urgency'));
   const wait = Math.max(5, state.queue.length * 3 + (6 - acuity) * 2);
@@ -290,12 +333,13 @@ function addPatientFromCheckin(event) {
   render();
   $('#patientSelect').value = patient.id;
   renderPatientPortal();
-  showToast(`${patient.name} joined the live care queue.`);
+  showToast(noBedsAvailable ? `No beds are vacant. ${patient.name} was added to the waiting queue.` : `${patient.name} joined the live care queue.`);
 }
 
 function renderChart() { if (!telemetryChart) return; telemetryChart.data.labels = state.history.labels; telemetryChart.data.datasets[0].data = state.history.waits; telemetryChart.data.datasets[1].data = state.history.utilization; telemetryChart.update('none'); }
 
 function tick() {
+  if (!syncLeader) return;
   const increments = state.speed; state.elapsed += increments; state.clockMinutes += increments;
   state.queue.forEach((patient) => { patient.wait += increments; });
   state.beds.forEach((bed) => { if (bed.patient) { bed.patient.treatment -= increments / 60; if (bed.patient.treatment <= 0) bed.patient = null; } });
@@ -415,7 +459,6 @@ function bindEvents() {
 }
 
 state = loadState();
-saveState();
 initChart();
 bindEvents();
 initScene();
@@ -424,3 +467,4 @@ populateAdmissionOptions();
 render();
 window.addEventListener('beforeunload', saveStateBeforeClose);
 setInterval(tick, 1000);
+connectSharedState();
