@@ -139,7 +139,7 @@ function getAllActivePatients() {
   ];
 }
 function getAverageWaitTime() {
-  const queuedPatients = state.queue.filter((patient) => patient && Number.isFinite(Number(patient.wait)));
+  const queuedPatients = (state.queue || []).filter((patient) => patient && Number.isFinite(Number(patient.wait)));
   if (!queuedPatients.length) return 0;
   const totalWait = queuedPatients.reduce((sum, patient) => sum + Math.max(0, Number(patient.wait || 0)), 0);
   return Math.round(totalWait / queuedPatients.length);
@@ -448,7 +448,17 @@ function admitAvailableCriticalPatients() {
 function admitPatient(candidate) { const bed = findBedFor(candidate); const doctor = findAvailableDoctor(candidate); if (!bed || !doctor) return false; bed.patient = { ...candidate, doctor, heartRate: candidate.acuity >= 5 ? randomInt(108, 132) : randomInt(70, 105), spo2: candidate.acuity >= 5 ? randomInt(89, 96) : randomInt(95, 100), treatment: randomInt(22, 85) }; const record = state.patientRecords.find((patient) => patient.id === candidate.id); if (record) { record.status = 'In care'; record.bed = bed.id; record.physician = doctor; record.treatment = `${remainingMinutes(bed.patient.treatment)} min`; record.activity = 'Admitted and assigned to a care team'; } state.queue = state.queue.filter((patient) => patient.id !== candidate.id); return true; }
 function admitNextPatient() { const ordered = sortedQueue(); const admission = ordered.find((patient) => findBedFor(patient) && findAvailableDoctor(patient)); if (!admission) return; admitPatient(admission); saveState(); }
 function findBedFor(patient) { const preferred = state.beds.find((bed) => bed.type === patient.bedType && !bed.patient && !isOutageBed(bed)); return preferred || state.beds.find((bed) => bed.type !== 'ICU' && !bed.patient && !isOutageBed(bed)); }
-function addTelemetryPoint() { const free = availableBeds(); const total = state.beds.length - state.icuOutage; state.history.labels.push(formatClock(state.clockMinutes)); state.history.waits.push(Math.round(state.queue.reduce((sum, patient) => sum + patient.wait, 0) / Math.max(state.queue.length, 1))); state.history.utilization.push(Math.round(((total - free) / total) * 100)); if (state.history.labels.length > 12) { Object.values(state.history).forEach((values) => values.shift()); } }
+function addTelemetryPoint() {
+  const free = availableBeds();
+  const total = state.beds.length - state.icuOutage;
+  const averageQueueWait = getAverageWaitTime();
+  state.history.labels.push(formatClock(state.clockMinutes));
+  state.history.waits.push(averageQueueWait);
+  state.history.utilization.push(Math.round(((total - free) / total) * 100));
+  if (state.history.labels.length > 12) {
+    Object.values(state.history).forEach((values) => values.shift());
+  }
+}
 
 function openBedModal(bed) { const patient = bed.patient; $('#modalBedLabel').textContent = `BED ${bed.id.toUpperCase()}`; $('#modalPatientName').textContent = patient.name; $('#modalPatientMeta').textContent = `Age ${patient.age} · ${getBadge(patient).label} care`; $('#modalAvatar').textContent = initials(patient.name); $('#modalBadge').textContent = getBadge(patient).label; $('#modalBadge').className = `triage-badge ${getBadge(patient).className}`; $('#modalHeartRate').innerHTML = `${patient.heartRate} <small>BPM</small>`; $('#modalSpo2').innerHTML = `${patient.spo2}<small>% SpO2</small>`; $('#modalDoctor').textContent = patient.doctor; $('#modalTreatment').innerHTML = `${remainingMinutes(patient.treatment)} <small>min</small>`; $('#bedModal').hidden = false; }
 function closeModals() { $$('.modal-backdrop').forEach((modal) => { modal.hidden = true; }); }
