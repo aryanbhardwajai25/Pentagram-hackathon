@@ -346,7 +346,17 @@ function switchRole(role) { activeRole = role; $('#portalSelector').hidden = tru
 function createCaptcha() { captchaValue = String(Math.floor(1000 + Math.random() * 9000)); $('#captchaCode').textContent = captchaValue; }
 function openSignIn(role, entryMode = 'existing') { pendingRole = role; if (role === 'patient') patientEntryMode = entryMode; const patientNameList = role === 'patient' && entryMode === 'new' ? [] : role === 'staff' ? STAFF_NAMES : role === 'doctor' ? DOCTORS : getPatientLoginNames(); $('#signInRoleLabel').textContent = `${role === 'staff' ? 'Hospital operations' : role === 'doctor' ? 'Individual doctor' : entryMode === 'new' ? 'New patient admission' : 'Existing patient'} access`; $('#signInTitle').textContent = role === 'patient' && entryMode === 'new' ? 'Start a new patient admission' : `Sign in to the ${role === 'staff' ? 'staff' : role === 'doctor' ? 'doctor' : 'patient'} portal`; $('#signInForm').reset(); $('#signInError').hidden = true; $('#demoCredentials').textContent = 'Interface preview only · Authentication is not connected.'; $('#doctorNames').innerHTML = patientNameList.map((name) => `<option value="${name}"></option>`).join(''); if (role === 'patient' && entryMode === 'new') $('#signInName').removeAttribute('list'); else $('#signInName').setAttribute('list', 'doctorNames'); $('#signInName').placeholder = role === 'staff' ? 'Select staff name' : role === 'doctor' ? 'Select doctor name' : entryMode === 'new' ? 'Enter new patient name' : 'Select existing patient name'; createCaptcha(); $('#signInModal').hidden = false; $('#signInName').focus(); }
 function closeSignIn() { $('#signInModal').hidden = true; pendingRole = null; }
-function authenticate(event) { event.preventDefault(); const role = pendingRole; const name = String(new FormData(event.currentTarget).get('name')).trim(); if (role === 'doctor' && DOCTORS.includes(name)) selectedDoctorName = name; if (role === 'patient' && patientEntryMode === 'existing') selectedPatientName = name; closeSignIn(); switchRole(role); }
+function authenticate(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const password = String(new FormData(form).get('password') || '');
+  const passwordError = $('#signInPasswordError');
+  if (password.length > 10) { passwordError.hidden = false; $('#signInError').textContent = 'Please correct the password before continuing.'; $('#signInError').hidden = false; return; }
+  const role = pendingRole; const name = String(new FormData(form).get('name')).trim();
+  if (role === 'doctor' && DOCTORS.includes(name)) selectedDoctorName = name;
+  if (role === 'patient' && patientEntryMode === 'existing') selectedPatientName = name;
+  closeSignIn(); switchRole(role);
+}
 function openPatientCheckin() { openSignIn('patient', 'existing'); }
 function openNewPatientAdmission() { patientEntryMode = 'new'; switchRole('patient'); }
 function showPortalSelector() { activeRole = null; closeSignIn(); $('#portalSelector').hidden = false; $('.topbar').hidden = true; $('#staffView').hidden = true; $('#doctorView').hidden = true; $('#patientView').hidden = true; }
@@ -378,8 +388,12 @@ function addPatientFromCheckin(event) {
   const acuity = Number(form.get('urgency'));
   const wait = Math.max(5, state.queue.length * 3 + (6 - acuity) * 2);
   const name = String(form.get('name')).trim();
+  const phone = String(form.get('phone')).trim();
+  const patientPassword = String(form.get('patientPassword')).trim();
+  if (!/^\d{10}$/.test(phone)) { showToast('Phone number must contain exactly 10 digits.'); return; }
+  if (patientPassword.length > 10) { showToast('Password must be 10 characters or fewer.'); return; }
   const doctor = String(form.get('doctor')).trim();
-  const patient = createPatient({ id: `P-${state.nextId++}`, name, age: Number(form.get('age')), phone: String(form.get('phone')).trim(), patientPassword: String(form.get('patientPassword')).trim(), bloodGroup: String(form.get('bloodGroup')).trim(), emergencyContact: String(form.get('emergencyContact')).trim(), address: String(form.get('address')).trim(), insurance: String(form.get('insurance')).trim(), concern: String(form.get('concern')).trim(), doctor, acuity, wait });
+  const patient = createPatient({ id: `P-${state.nextId++}`, name, age: Number(form.get('age')), phone, patientPassword, bloodGroup: String(form.get('bloodGroup')).trim(), emergencyContact: String(form.get('emergencyContact')).trim(), address: String(form.get('address')).trim(), insurance: String(form.get('insurance')).trim(), concern: String(form.get('concern')).trim(), doctor, acuity, wait });
   if (!PATIENT_NAMES.includes(patient.name)) PATIENT_NAMES.push(patient.name);
   state.patientRecords.push({ id: patient.id, name: patient.name, age: patient.age, concern: patient.concern, phone: patient.phone, patientPassword: patient.patientPassword, bloodGroup: patient.bloodGroup, emergencyContact: patient.emergencyContact, address: patient.address, insurance: patient.insurance, status: 'Waiting', bed: 'Queue', physician: patient.doctor, treatment: 'Pending', activity: 'New patient sign-in completed' });
   state.queue.push(patient);
@@ -541,6 +555,9 @@ function bindEvents() {
   $('#patientCheckinForm')?.addEventListener('submit', addPatientFromCheckin);
   $('#signInForm')?.addEventListener('submit', authenticate);
   $('#closeSignIn')?.addEventListener('click', closeSignIn);
+  $('#patientCheckinForm')?.querySelector('[name="phone"]')?.addEventListener('input', (event) => { event.target.value = event.target.value.replace(/\D/g, '').slice(0, 10); });
+  $('#patientCheckinForm')?.querySelector('[name="patientPassword"]')?.addEventListener('input', (event) => { event.target.value = event.target.value.slice(0, 10); });
+  $('#signInPassword')?.addEventListener('input', (event) => { event.target.value = event.target.value.slice(0, 10); $('#signInPasswordError').hidden = true; });
   $('#signInModal')?.addEventListener('click', (event) => {
     if (event.target.id === 'signInModal') closeSignIn();
   });

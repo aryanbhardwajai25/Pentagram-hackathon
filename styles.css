@@ -113,3 +113,5 @@ h1, h2, p { margin: 0; } h1, h2, .stat-value, .staff-value strong { font-family:
 .doctor-switcher select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(43,123,185,.1); }
 .checkin-form select { display: block; width: 100%; margin-top: 7px; min-height: 40px; border: 1px solid var(--border); border-radius: 9px; padding: 0 11px; color: var(--navy); background: var(--white); outline: none; }
 .checkin-form select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(43,123,185,.1); }
+
+.field-error { color: var(--red); font-size: 10px; font-weight: 500; }

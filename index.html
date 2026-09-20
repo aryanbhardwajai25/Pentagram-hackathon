@@ -26,7 +26,7 @@
       <form id="signInForm">
         <label for="signInName">Name<input id="signInName" name="name" list="doctorNames" required autocomplete="name" placeholder="Enter your name" /></label>
         <datalist id="doctorNames"><option value="Dr. Sarah Rao"></option><option value="Dr. Marcus Vance"></option><option value="Dr. Ananya Patel"></option><option value="Dr. David Kim"></option><option value="Dr. Elena Gomez"></option></datalist>
-        <label for="signInPassword">Password<input id="signInPassword" name="password" type="password" required autocomplete="current-password" placeholder="Enter your password" /></label>
+        <label for="signInPassword">Password<input id="signInPassword" name="password" type="password" required maxlength="10" autocomplete="current-password" placeholder="Enter your password" /><small class="field-error" id="signInPasswordError" hidden>Password must be 10 characters or fewer.</small></label>
         <label for="captchaInput">CAPTCHA <span class="captcha-code" id="captchaCode"></span><input id="captchaInput" name="captcha" required autocomplete="off" placeholder="Type the code above" /></label>
         <p class="sign-in-error" id="signInError" role="alert" hidden></p>
         <button class="button button-primary wide" type="submit">Sign In</button>
@@ -41,10 +41,13 @@
         <div><p class="eyebrow">Smart hospital simulator</p><h1>MEDFLOW</h1></div>
       </div>
       <div class="care-collage" aria-hidden="true">
+        <figure class="care-photo care-photo-main"><img src="https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&amp;fit=crop&amp;w=1100&amp;q=85" alt="Hospital care team in a bright clinical room" /></figure>
+        <figure class="care-photo care-photo-top"><img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&amp;fit=crop&amp;w=600&amp;q=85" alt="Medical staff reviewing patient care" /></figure>
+        <figure class="care-photo care-photo-bottom"><img src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&amp;fit=crop&amp;w=600&amp;q=85" alt="Clinician assisting a patient" /></figure>
         <span class="care-orbit care-orbit-one"></span><span class="care-orbit care-orbit-two"></span>
       </div>
       <div class="portal-copy"><p class="eyebrow teal-text">Welcome to the care network</p><h2>Select Your Portal to Enter MEDFLOW</h2><p>Select a portal and sign in to view live resources and workflows.</p></div>
-      <button class="landing-checkin" id="landingCheckinBtn">Existing Patient Login <span>→</span></button>
+      <button class="landing-checkin" id="landingCheckinBtn" type="button">Existing Patient Login <span>→</span></button>
     </div>
     <div class="role-grid">
       <button class="role-card doctor-role" data-role="doctor"><span class="role-icon">👨‍⚕️</span><span><strong>Doctor Portal</strong><small>View my assigned patients, vitals, and treatment plans</small></span><b>Enter portal <i>→</i></b></button>
@@ -147,8 +150,8 @@
       <form class="checkin-form" id="patientCheckinForm">
         <label>Patient name<input name="name" required placeholder="e.g. Alex Morgan" /></label>
         <label>Age<input name="age" type="number" min="1" max="120" required placeholder="Age" /></label>
-        <label>Set password<input name="patientPassword" type="password" required placeholder="Create a password" /></label>
-        <label>Phone number<input name="phone" type="tel" required placeholder="e.g. (555) 010-2040" /></label>
+        <label>Set password<input name="patientPassword" type="password" required maxlength="10" placeholder="Create a password" /></label>
+        <label>Phone number<input name="phone" type="tel" inputmode="numeric" pattern="[0-9]{10}" required maxlength="10" placeholder="10 digits only" /></label>
         <label>Blood group<select name="bloodGroup" required><option value="">Choose blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option><option>Unknown</option></select></label>
         <label>Emergency contact<input name="emergencyContact" required placeholder="Name and phone" /></label>
         <label class="checkin-wide">Home address<input name="address" required placeholder="Street, city, state" /></label>
