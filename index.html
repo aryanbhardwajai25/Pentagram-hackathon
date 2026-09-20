@@ -46,7 +46,7 @@
     <div class="role-grid">
       <button class="role-card doctor-role" data-role="doctor"><span class="role-icon">👨‍⚕️</span><span><strong>Doctor Portal</strong><small>View my assigned patients, vitals, and treatment plans</small></span><b>Enter portal <i>→</i></b></button>
       <button class="role-card staff-role" data-role="staff"><span class="role-icon">🏥</span><span><strong>Hospital Operations / Staff</strong><small>Full bed matrix, resource allocation, and chaos simulation</small></span><b>Enter portal <i>→</i></b></button>
-      <button class="role-card patient-role" data-role="patient" data-entry-mode="new"><span class="role-icon">🧑‍🦽</span><span><strong>New Patient Admission</strong><small>Enter hospital details and request a new care admission</small></span><b>Start admission <i>→</i></b></button>
+      <button class="role-card patient-role" data-role="patient" data-entry-mode="new"><span class="role-icon">🧑‍🦽</span><span><strong>New Patient Admission</strong><small>Sign in with your health details and request a new care admission</small></span><b>Start sign in <i>→</i></b></button>
     </div>
     <p class="portal-footnote"><span>●</span> Demo environment · All information is simulated</p>
   </section>
@@ -140,19 +140,20 @@
   <main class="role-shell patient-view" id="patientView" hidden>
     <section class="patient-welcome"><div class="patient-private-label" id="patientPrivateLabel">Private patient view</div><p class="eyebrow teal-text" id="patientPortalLabel">Patient &amp; family access</p><h2 id="patientPortalHeading">Your care, clearly explained.</h2><p id="patientPortalDescription">Follow your place in the live hospital queue with simple, up-to-date information.</p></section>
     <section class="checkin-panel panel" id="patientSignupPanel">
-      <div class="section-heading"><div><p class="eyebrow teal-text">New patient sign-up</p><h2>Create your patient profile</h2></div><span class="section-note">Basic hospital details help us place you correctly.</span></div>
+      <div class="section-heading"><div><p class="eyebrow teal-text">New patient sign-in</p><h2>Tell us about yourself</h2></div><span class="section-note">Your details are saved to the patient portal after submission.</span></div>
       <form class="checkin-form" id="patientCheckinForm">
         <label>Patient name<input name="name" required placeholder="e.g. Alex Morgan" /></label>
         <label>Age<input name="age" type="number" min="1" max="120" required placeholder="Age" /></label>
-        <label>Set password<input name="patientPassword" type="password" placeholder="Create a password" /></label>
+        <label>Set password<input name="patientPassword" type="password" required placeholder="Create a password" /></label>
         <label>Phone number<input name="phone" type="tel" required placeholder="e.g. (555) 010-2040" /></label>
+        <label>Blood group<select name="bloodGroup" required><option value="">Choose blood group</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option><option>Unknown</option></select></label>
         <label>Emergency contact<input name="emergencyContact" required placeholder="Name and phone" /></label>
         <label class="checkin-wide">Home address<input name="address" required placeholder="Street, city, state" /></label>
         <label>Insurance provider<input name="insurance" required placeholder="Provider or self-pay" /></label>
         <label>Preferred doctor<select name="doctor" id="admissionDoctor" required></select></label>
         <label class="checkin-wide">Main concern / complaint<textarea name="concern" required rows="2" placeholder="Chest pain, fever, sprained ankle..."></textarea></label>
         <fieldset class="urgency-field"><legend>Urgency level</legend><label><input type="radio" name="urgency" value="1" checked /> <span>🟢 Routine</span></label><label><input type="radio" name="urgency" value="3" /> <span>🟡 Urgent</span></label><label><input type="radio" name="urgency" value="5" /> <span>🔴 Critical</span></label></fieldset>
-        <button class="button button-primary checkin-submit" type="submit">Sign Up / Join Queue</button>
+        <button class="button button-primary checkin-submit" type="submit">Submit Admission</button>
       </form>
     </section>
     <section class="patient-selector panel" id="patientSelector"><label for="patientSelect">Select Patient</label><select id="patientSelect"></select></section>
