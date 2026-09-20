@@ -471,19 +471,49 @@ function initScene() {
   requestAnimationFrame(animate);
 }
 
-function initChart() { const ctx = $('#telemetryChart'); telemetryChart = new Chart(ctx, { type: 'line', data: { labels: state.history.labels, datasets: [{ label: 'Average wait time', data: state.history.waits, borderColor: '#2B7BB9', backgroundColor: 'rgba(43,123,185,.08)', tension: .4, fill: true, pointRadius: 2, pointBackgroundColor: '#2B7BB9' }, { label: 'Bed utilization %', data: state.history.utilization, borderColor: '#12807C', backgroundColor: 'transparent', tension: .4, pointRadius: 2, pointBackgroundColor: '#12807C' }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#14324F', padding: 10, titleFont: { family: 'DM Sans' }, bodyFont: { family: 'DM Sans' } } }, scales: { x: { grid: { display: false }, ticks: { color: '#718397', font: { size: 10 } } }, y: { beginAtZero: true, suggestedMax: 100, grid: { color: '#edf1f3' }, ticks: { color: '#718397', font: { size: 10 } } } } } }); }
+function initChart() {
+  const ctx = $('#telemetryChart');
+  if (!ctx || !window.Chart) return;
+  telemetryChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: state.history.labels,
+      datasets: [
+        { label: 'Average wait time', data: state.history.waits, borderColor: '#2B7BB9', backgroundColor: 'rgba(43,123,185,.08)', tension: .4, fill: true, pointRadius: 2, pointBackgroundColor: '#2B7BB9' },
+        { label: 'Bed utilization %', data: state.history.utilization, borderColor: '#12807C', backgroundColor: 'transparent', tension: .4, pointRadius: 2, pointBackgroundColor: '#12807C' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: '#14324F', padding: 10, titleFont: { family: 'DM Sans' }, bodyFont: { family: 'DM Sans' } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#718397', font: { size: 10 } } },
+        y: { beginAtZero: true, suggestedMax: 100, grid: { color: '#edf1f3' }, ticks: { color: '#718397', font: { size: 10 } } }
+      }
+    }
+  });
+}
 
 function bindEvents() {
-  $$('[data-role]').forEach((card) => card.addEventListener('click', () => card.dataset.entryMode === 'new' ? openNewPatientAdmission() : openSignIn(card.dataset.role, card.dataset.entryMode || 'existing')));
-  $('#landingCheckinBtn').addEventListener('click', openPatientCheckin);
-  $('#patientCheckinBtn').addEventListener('click', openPatientCheckin);
-  $('#switchPortal').addEventListener('click', showPortalSelector);
-  $('#patientSelect').addEventListener('change', renderPatientPortal);
-  $('#patientCheckinForm').addEventListener('submit', addPatientFromCheckin);
-  $('#signInForm').addEventListener('submit', authenticate);
-  $('#closeSignIn').addEventListener('click', closeSignIn);
-  $('#signInModal').addEventListener('click', (event) => { if (event.target.id === 'signInModal') closeSignIn(); });
-  $$('[data-close-modal]').forEach((button) => button.addEventListener('click', closeModals)); $$('.modal-backdrop').forEach((backdrop) => backdrop.addEventListener('click', (event) => { if (event.target === backdrop) closeModals(); }));
+  $$('[data-role]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const mode = card.dataset.entryMode === 'new' ? 'new' : 'existing';
+      openSignIn(card.dataset.role, mode);
+    });
+  });
+
+  $('#landingCheckinBtn')?.addEventListener('click', openPatientCheckin);
+  $('#patientCheckinBtn')?.addEventListener('click', openPatientCheckin);
+  $('#switchPortal')?.addEventListener('click', showPortalSelector);
+  $('#patientSelect')?.addEventListener('change', renderPatientPortal);
+  $('#patientCheckinForm')?.addEventListener('submit', addPatientFromCheckin);
+  $('#signInForm')?.addEventListener('submit', authenticate);
+  $('#closeSignIn')?.addEventListener('click', closeSignIn);
+  $('#signInModal')?.addEventListener('click', (event) => {
+    if (event.target.id === 'signInModal') closeSignIn();
+  });
 }
 
 state = loadState();
