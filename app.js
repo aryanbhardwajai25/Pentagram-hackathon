@@ -1,10 +1,26 @@
+// Firebase Realtime Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyC8XNNaxmNlGrFAXyHr3VG9pdVYDkibXPs",
+  authDomain: "medflow-c2fb6.firebaseapp.com",
+  databaseURL: "https://medflow-c2fb6-default-rtdb.firebaseio.com",
+  projectId: "medflow-c2fb6",
+  storageBucket: "medflow-c2fb6.firebasestorage.app",
+  messagingSenderId: "782221373607",
+  appId: "1:782221373607:web:97d10265c150b60d5fab82"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
+const rtdb = firebase.database();
+const stateRef = rtdb.ref('medflow_live_state');
 const WARDS = {
   ICU: { label: 'Intensive Care Unit', short: 'ICU', count: 8 },
   Emergency: { label: 'Emergency Ward', short: 'Emergency', count: 17 },
   General: { label: 'General Ward', short: 'General', count: 25 }
 };
 
-const PATIENT_NAMES = [];
+const PATIENT_NAMES = ['Ayush', 'Ketan', 'Marcus', 'Shreyansh', 'Sidhanth'];
 const STAFF_NAMES = ['Alex Morgan', 'Taylor Brooks', 'Riley Carter', 'Jordan Hayes', 'Casey Bennett', 'Morgan Ellis', 'Jamie Foster', 'Avery Collins', 'Cameron Reed', 'Drew Parker', 'Skyler Hayes', 'Quinn Sullivan', 'Peyton Ross', 'Reese Turner', 'Emerson Bailey', 'Finley Cooper', 'Harper Mitchell', 'Rowan Kelly'];
 const DOCTOR_ROSTER = [
   { name: 'Dr. Sarah Rao', specialty: 'Emergency & Critical Care' },
@@ -134,6 +150,9 @@ function isOutageBed(bed) { return bed.type === 'ICU' && bed.index >= WARDS.ICU.
 function sortedQueue() { return [...state.queue].sort((a, b) => getPriority(b) - getPriority(a)); }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Storage can be unavailable in restricted browser contexts. */ }
+  if (typeof stateRef !== 'undefined') {
+  stateRef.set(state);
+}
   if (syncReady) fetch(`${SYNC_API}/state`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state, version: state._version || 0 }) }).catch(() => {});
 }
 function saveStateBeforeClose() { saveState(); }
@@ -143,30 +162,26 @@ function applySharedState(sharedState) {
   if ((sharedState._version || 0) < (state?._version || 0)) return;
   state = normalizeDoctorAssignments(sharedState);
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Local cache is optional. */ }
+  if (typeof stateRef !== 'undefined') {
+  stateRef.set(state);
+}
   render();
 }
 
-async function connectSharedState() {
-  try {
-    const response = await fetch(`${SYNC_API}/state`);
-    if (!response.ok) throw new Error('Shared state unavailable');
-    const payload = await response.json();
-    if (payload.state) applySharedState(payload.state);
-    syncReady = true;
-    if (!payload.state) saveState();
-    const lease = await fetch(`${SYNC_API}/lease`, { method: 'POST' }).then((result) => result.json());
-    syncToken = lease.token || '';
-    syncLeader = Boolean(lease.leader);
-    const events = new EventSource(`${SYNC_API}/events`);
-    events.addEventListener('state', (event) => applySharedState(JSON.parse(event.data)));
-    events.addEventListener('lease', (event) => { syncLeader = JSON.parse(event.data).token === syncToken; });
-    setInterval(async () => {
-      try {
-        const renewed = await fetch(`${SYNC_API}/lease`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: syncToken }) }).then((result) => result.json());
-        syncLeader = Boolean(renewed.leader);
-        syncToken = renewed.token || syncToken;
-      } catch (error) { syncLeader = false; }
-    }, 3000);
+function connectSharedState() {
+  stateRef.on('value', (snapshot) => {
+    const remoteData = snapshot.val();
+    if (remoteData) {
+      state = remoteData;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      if (typeof stateRef !== 'undefined') {
+  stateRef.set(state);
+}
+      if (typeof renderAll === 'function') renderAll();
+      else if (typeof updateUI === 'function') updateUI();
+    }
+  });
+}
   } catch (error) {
     syncReady = false;
     syncLeader = true;
