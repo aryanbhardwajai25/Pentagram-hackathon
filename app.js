@@ -279,14 +279,36 @@ function populateAdmissionOptions() {
 }
 
 function renderPatientDirectory() {
-  const storedPatients = [...state.queue.map((patient) => ({ ...patient, status: 'Waiting', bed: 'Queue', physician: patient.doctor || 'Assigning now', treatment: 'Pending', activity: 'Waiting for bed assignment' })), ...state.beds.filter((bed) => bed.patient).map((bed) => ({ ...bed.patient, status: 'In care', bed: bed.id, physician: bed.patient.doctor || 'Assigning now', treatment: `${remainingMinutes(bed.patient.treatment)} min`, activity: 'Care team monitoring live vitals' }))];
-  const directoryPatients = [...PATIENT_DIRECTORY, ...state.patientRecords, ...storedPatients].filter((patient, index, patients) => patients.findIndex((item) => item.id === patient.id) === index);
-  $('#patientDirectory').innerHTML = directoryPatients.map((patient) => `<article class="patient-directory-card"><div class="directory-card-top"><div class="patient-avatar">${initials(patient.name)}</div><span class="status-pill ${patient.status === 'Waiting' ? 'waiting' : 'receiving'}">${patient.status}</span></div><h3>${patient.name}</h3><p class="directory-id">${patient.id} · Age ${patient.age}</p><div class="directory-details"><span><strong>Concern</strong>${patient.concern}</span><span><strong>Location</strong>${patient.bed}</span><span><strong>Physician</strong>${patient.physician}</span><span><strong>Treatment</strong>${patient.treatment}</span></div><p class="directory-activity"><strong>Recent activity</strong>${patient.activity}</p></article>`).join('');
+  const dir = Array.isArray(PATIENT_DIRECTORY) ? PATIENT_DIRECTORY : [];
+  const recs = (state && Array.isArray(state.patientRecords)) ? state.patientRecords : [];
+  const queue = (state && Array.isArray(state.queue)) ? state.queue : [];
+  const beds = (state && Array.isArray(state.beds)) ? state.beds.filter(b => b && b.patient).map(b => b.patient) : [];
+  
+  const directoryPatients = [...dir, ...recs, ...queue, ...beds].filter((patient, index, self) => 
+    patient && patient.name && index === self.findIndex(p => p && p.name === patient.name)
+  );
+
+  const container = $('#patientDirectory');
+  if (container) {
+    container.innerHTML = directoryPatients.map(patient => `
+      <article class="patient-directory-card">
+        <div class="patient-card-header">
+          <strong>${patient.name}</strong>
+          <span class="badge">${patient.triageCategory || patient.severity || 'Stable'}</span>
+        </div>
+      </article>
+    `).join('');
+  }
 }
 
 function getPatientLoginNames() {
-  const storedPatients = [...state.queue, ...state.beds.filter((bed) => bed.patient).map((bed) => bed.patient)];
-  return [...new Set([...PATIENT_NAMES, ...state.patientRecords.map((patient) => patient.name), ...storedPatients.map((patient) => patient.name)])];
+  const baseNames = Array.isArray(PATIENT_NAMES) ? PATIENT_NAMES : [];
+  const queue = (state && Array.isArray(state.queue)) ? state.queue : [];
+  const beds = (state && Array.isArray(state.beds)) ? state.beds.filter(b => b && b.patient).map(b => b.patient) : [];
+  const recs = (state && Array.isArray(state.patientRecords)) ? state.patientRecords : [];
+
+  const storedNames = [...queue, ...beds, ...recs].map(p => p && p.name).filter(Boolean);
+  return [...new Set([...baseNames, ...storedNames])];
 }
 
 function dischargePatient(bedId) { const bed = state.beds.find((item) => item.id === bedId); if (!bed || !bed.patient) return; const name = bed.patient.name; const record = state.patientRecords.find((patient) => patient.id === bed.patient.id); if (record) { record.status = 'Discharged'; record.bed = 'Discharged'; record.physician = bed.patient.doctor || 'Care team'; record.treatment = 'Complete'; record.activity = 'Treatment completed and patient discharged'; } bed.patient = null; saveState(); render(); showToast(`${name} discharged. ${bedId} is now available.`); }
