@@ -147,6 +147,7 @@
         <label>Emergency contact<input name="emergencyContact" required placeholder="Name and phone" /></label>
         <label class="checkin-wide">Home address<input name="address" required placeholder="Street, city, state" /></label>
         <label>Insurance provider<input name="insurance" required placeholder="Provider or self-pay" /></label>
+        <label>Preferred doctor<select name="doctor" id="admissionDoctor" required></select></label>
         <label class="checkin-wide">Main concern / complaint<textarea name="concern" required rows="2" placeholder="Chest pain, fever, sprained ankle..."></textarea></label>
         <fieldset class="urgency-field"><legend>Urgency level</legend><label><input type="radio" name="urgency" value="1" checked /> <span>🟢 Routine</span></label><label><input type="radio" name="urgency" value="3" /> <span>🟡 Urgent</span></label><label><input type="radio" name="urgency" value="5" /> <span>🔴 Critical</span></label></fieldset>
         <button class="button button-primary checkin-submit" type="submit">Sign Up / Join Queue</button>

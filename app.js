@@ -46,6 +46,7 @@ function createPatient(overrides = {}) {
     emergencyContact: overrides.emergencyContact || '',
     address: overrides.address || '',
     insurance: overrides.insurance || '',
+    doctor: overrides.doctor || '',
     acuity,
     bedType: overrides.bedType || (acuity >= 5 ? 'ICU' : acuity >= 4 ? 'Emergency' : 'General'),
     wait: overrides.wait || 0,
@@ -220,8 +221,16 @@ function renderPatientPortal() {
   $('#patientStatusCard').innerHTML = `<div class="status-card-header"><div class="patient-avatar">${initials(patient.name)}</div><div><p class="eyebrow teal-text">Live care status</p><h3>${patient.name}</h3><span>Patient ID ${patient.id}</span></div><span class="status-pill ${waiting ? 'waiting' : 'receiving'}">${waiting ? 'Waiting' : 'In care'}</span></div><div class="admission-bar ${waiting ? 'not-admitted' : 'admitted'}"><span class="admission-dot"></span><strong>${waiting ? 'Not admitted' : 'Admitted'}</strong>${waiting ? '<span>Waiting for bed assignment</span>' : `<span>Assigned to ${patient.bedId}</span>`}</div><div class="patient-status-main"><div class="status-message"><span class="status-icon">${waiting ? '◷' : '✓'}</span><div><strong>${waiting ? 'Waiting for Bed Assignment' : `Currently Receiving Care in ${patient.bedId}`}</strong><p>${waiting ? 'Our team is preparing the right care space for you.' : 'Your care team is actively monitoring your treatment.'}</p></div></div><div class="patient-metrics"><div><span>${waiting ? 'Estimated wait' : 'Time remaining'}</span><strong>${waiting ? Math.max(1, 30 - patient.wait) : remainingMinutes(patient.treatment)} <small>min</small></strong></div><div><span>Exact queue position</span><strong>${waiting ? `#${String(position).padStart(2, '0')}` : position}</strong></div><div><span>Assigned physician</span><strong class="physician-name">${patient.doctor || 'Assigning now'}</strong></div></div></div>`;
 }
 
+function populateAdmissionOptions() {
+  const doctorSelect = $('#admissionDoctor');
+  if (!doctorSelect) return;
+  const selectedDoctor = doctorSelect.value || DOCTORS[0];
+  doctorSelect.innerHTML = DOCTOR_ROSTER.map((doctor) => `<option value="${doctor.name}">${doctor.name} · ${doctor.specialty}</option>`).join('');
+  doctorSelect.value = DOCTORS.includes(selectedDoctor) ? selectedDoctor : DOCTORS[0];
+}
+
 function renderPatientDirectory() {
-  const storedPatients = [...state.queue.map((patient) => ({ ...patient, status: 'Waiting', bed: 'Queue', physician: 'Assigning now', treatment: 'Pending', activity: 'Waiting for bed assignment' })), ...state.beds.filter((bed) => bed.patient).map((bed) => ({ ...bed.patient, status: 'In care', bed: bed.id, physician: bed.patient.doctor || 'Assigning now', treatment: `${remainingMinutes(bed.patient.treatment)} min`, activity: 'Care team monitoring live vitals' }))];
+  const storedPatients = [...state.queue.map((patient) => ({ ...patient, status: 'Waiting', bed: 'Queue', physician: patient.doctor || 'Assigning now', treatment: 'Pending', activity: 'Waiting for bed assignment' })), ...state.beds.filter((bed) => bed.patient).map((bed) => ({ ...bed.patient, status: 'In care', bed: bed.id, physician: bed.patient.doctor || 'Assigning now', treatment: `${remainingMinutes(bed.patient.treatment)} min`, activity: 'Care team monitoring live vitals' }))];
   const directoryPatients = [...PATIENT_DIRECTORY, ...state.patientRecords, ...storedPatients].filter((patient, index, patients) => patients.findIndex((item) => item.id === patient.id) === index);
   $('#patientDirectory').innerHTML = directoryPatients.map((patient) => `<article class="patient-directory-card"><div class="directory-card-top"><div class="patient-avatar">${initials(patient.name)}</div><span class="status-pill ${patient.status === 'Waiting' ? 'waiting' : 'receiving'}">${patient.status}</span></div><h3>${patient.name}</h3><p class="directory-id">${patient.id} · Age ${patient.age}</p><div class="directory-details"><span><strong>Concern</strong>${patient.concern}</span><span><strong>Location</strong>${patient.bed}</span><span><strong>Physician</strong>${patient.physician}</span><span><strong>Treatment</strong>${patient.treatment}</span></div><p class="directory-activity"><strong>Recent activity</strong>${patient.activity}</p></article>`).join('');
 }
@@ -269,9 +278,10 @@ function addPatientFromCheckin(event) {
   const acuity = Number(form.get('urgency'));
   const wait = Math.max(5, state.queue.length * 3 + (6 - acuity) * 2);
   const name = String(form.get('name')).trim();
-  const patient = createPatient({ id: `P-${state.nextId++}`, name, age: Number(form.get('age')), phone: String(form.get('phone')).trim(), emergencyContact: String(form.get('emergencyContact')).trim(), address: String(form.get('address')).trim(), insurance: String(form.get('insurance')).trim(), concern: String(form.get('concern')).trim(), acuity, wait });
+  const doctor = String(form.get('doctor')).trim();
+  const patient = createPatient({ id: `P-${state.nextId++}`, name, age: Number(form.get('age')), phone: String(form.get('phone')).trim(), emergencyContact: String(form.get('emergencyContact')).trim(), address: String(form.get('address')).trim(), insurance: String(form.get('insurance')).trim(), concern: String(form.get('concern')).trim(), doctor, acuity, wait });
   if (!PATIENT_NAMES.includes(patient.name)) PATIENT_NAMES.push(patient.name);
-  state.patientRecords.push({ id: patient.id, name: patient.name, age: patient.age, concern: patient.concern, phone: patient.phone, emergencyContact: patient.emergencyContact, address: patient.address, insurance: patient.insurance, status: 'Waiting', bed: 'Queue', physician: 'Assigning now', treatment: 'Pending', activity: 'New patient sign-up completed' });
+  state.patientRecords.push({ id: patient.id, name: patient.name, age: patient.age, concern: patient.concern, phone: patient.phone, emergencyContact: patient.emergencyContact, address: patient.address, insurance: patient.insurance, status: 'Waiting', bed: 'Queue', physician: patient.doctor, treatment: 'Pending', activity: 'New patient sign-up completed' });
   state.queue.push(patient);
   selectedPatientName = name;
   saveState();
@@ -295,7 +305,7 @@ function tick() {
   render();
 }
 
-function admitNextPatient() { const ordered = sortedQueue(); const candidate = ordered.find((patient) => findBedFor(patient)); if (!candidate) return; const bed = findBedFor(candidate); const doctor = DOCTORS[(state.elapsed + bed.index) % DOCTORS.length]; bed.patient = { ...candidate, doctor, heartRate: candidate.acuity >= 5 ? randomInt(108, 132) : randomInt(70, 105), spo2: candidate.acuity >= 5 ? randomInt(89, 96) : randomInt(95, 100), treatment: randomInt(22, 85) }; const record = state.patientRecords.find((patient) => patient.id === candidate.id); if (record) { record.status = 'In care'; record.bed = bed.id; record.physician = doctor; record.treatment = `${remainingMinutes(bed.patient.treatment)} min`; record.activity = 'Admitted and assigned to a care team'; } state.queue = state.queue.filter((patient) => patient.id !== candidate.id); saveState(); }
+function admitNextPatient() { const ordered = sortedQueue(); const candidate = ordered.find((patient) => findBedFor(patient)); if (!candidate) return; const bed = findBedFor(candidate); const doctor = DOCTORS.includes(candidate.doctor) ? candidate.doctor : DOCTORS[(state.elapsed + bed.index) % DOCTORS.length]; bed.patient = { ...candidate, doctor, heartRate: candidate.acuity >= 5 ? randomInt(108, 132) : randomInt(70, 105), spo2: candidate.acuity >= 5 ? randomInt(89, 96) : randomInt(95, 100), treatment: randomInt(22, 85) }; const record = state.patientRecords.find((patient) => patient.id === candidate.id); if (record) { record.status = 'In care'; record.bed = bed.id; record.physician = doctor; record.treatment = `${remainingMinutes(bed.patient.treatment)} min`; record.activity = 'Admitted and assigned to a care team'; } state.queue = state.queue.filter((patient) => patient.id !== candidate.id); saveState(); }
 function findBedFor(patient) { const preferred = state.beds.find((bed) => bed.type === patient.bedType && !bed.patient && !isOutageBed(bed)); return preferred || state.beds.find((bed) => bed.type !== 'ICU' && !bed.patient && !isOutageBed(bed)); }
 function addTelemetryPoint() { const free = availableBeds(); const total = state.beds.length - state.icuOutage; state.history.labels.push(formatClock(state.clockMinutes)); state.history.waits.push(Math.round(state.queue.reduce((sum, patient) => sum + patient.wait, 0) / Math.max(state.queue.length, 1))); state.history.utilization.push(Math.round(((total - free) / total) * 100)); if (state.history.labels.length > 12) { Object.values(state.history).forEach((values) => values.shift()); } }
 
@@ -410,6 +420,7 @@ initChart();
 bindEvents();
 initScene();
 showPortalSelector();
+populateAdmissionOptions();
 render();
 window.addEventListener('beforeunload', saveStateBeforeClose);
 setInterval(tick, 1000);
