@@ -22,16 +22,21 @@ const WARDS = {
 
 const PATIENT_NAMES = ['Aanya Shah', 'Kabir Singh', 'Isha Mehta', 'Rohan Das', 'Mira Kapoor', 'Vihaan Joshi', 'Saanvi Rao', 'Arjun Malhotra', 'Tara Nair', 'Dev Khanna'];
 const RESTORED_PATIENTS = [
-  { id: 'P-DEMO-001', name: 'Aanya Shah', age: 34, concern: 'Migraine with visual aura', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Sofia Martinez', acuity: 3, bloodGroup: 'O+', bedType: 'General', wait: 0 },
-  { id: 'P-DEMO-002', name: 'Kabir Singh', age: 42, concern: 'Wrist fracture after a fall', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Michael Chen', acuity: 4, bloodGroup: 'A-', bedType: 'Emergency', wait: 0 },
-  { id: 'P-DEMO-003', name: 'Isha Mehta', age: 12, concern: 'Asthma exacerbation', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Elena Gomez', acuity: 4, bloodGroup: 'B+', bedType: 'Emergency', wait: 0 },
-  { id: 'P-DEMO-004', name: 'Rohan Das', age: 58, concern: 'Chest pain and palpitations', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. David Kim', acuity: 4, bloodGroup: 'AB+', bedType: 'Emergency', wait: 0 },
-  { id: 'P-DEMO-005', name: 'Mira Kapoor', age: 27, concern: 'Persistent fever', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Ananya Patel', acuity: 2, bloodGroup: 'O-', bedType: 'General', wait: 0 },
-  { id: 'P-DEMO-006', name: 'Vihaan Joshi', age: 39, concern: 'Acute abdominal pain', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. James Wilson', acuity: 3, bloodGroup: 'B-', bedType: 'Emergency', wait: 0 },
-  { id: 'P-DEMO-007', name: 'Saanvi Rao', age: 51, concern: 'High blood glucose', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Priya Nair', acuity: 3, bloodGroup: 'AB-', bedType: 'General', wait: 0 },
-  { id: 'P-DEMO-008', name: 'Arjun Malhotra', age: 31, concern: 'Deep forearm laceration', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Marcus Vance', acuity: 3, bloodGroup: 'A+', bedType: 'Emergency', wait: 0 },
-  { id: 'P-DEMO-009', name: 'Tara Nair', age: 46, concern: 'Pneumonia with shortness of breath', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. Sarah Rao', acuity: 4, bloodGroup: 'B+', bedType: 'Emergency', wait: 0 },
-  { id: 'P-DEMO-010', name: 'Dev Khanna', age: 63, concern: 'Uncontrolled hypertension', phone: '', emergencyContact: '', address: '', insurance: '', doctor: 'Dr. David Kim', acuity: 2, bloodGroup: 'O+', bedType: 'General', wait: 0 }
+  { id: 'P-DEMO-001', name: 'Aanya Shah', age: 34, concern: 'Migraine with visual aura', phone: '2025550101', emergencyContact: 'Meera Shah · 2025550191', address: '14 Cedar Lane, Riverton', insurance: 'Northstar Health', doctor: 'Dr. Sofia Martinez', acuity: 3, bloodGroup: 'O+', bedType: 'General', wait: 0 },
+  { id: 'P-DEMO-002', name: 'Kabir Singh', age: 42, concern: 'Wrist fracture after a fall', phone: '2025550102', emergencyContact: 'Ravi Singh · 2025550192', address: '28 Maple Street, Riverton', insurance: 'CivicCare', doctor: 'Dr. Michael Chen', acuity: 4, bloodGroup: 'A-', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-003', name: 'Isha Mehta', age: 12, concern: 'Asthma exacerbation', phone: '2025550103', emergencyContact: 'Nisha Mehta · 2025550193', address: '6 Willow Court, Lakeview', insurance: 'Northstar Health', doctor: 'Dr. Elena Gomez', acuity: 4, bloodGroup: 'B+', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-004', name: 'Rohan Das', age: 58, concern: 'Chest pain and palpitations', phone: '2025550104', emergencyContact: 'Anita Das · 2025550194', address: '91 Harbor Road, Riverton', insurance: 'Metro Mutual', doctor: 'Dr. David Kim', acuity: 4, bloodGroup: 'AB+', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-005', name: 'Mira Kapoor', age: 27, concern: 'Persistent fever', phone: '2025550105', emergencyContact: 'Neel Kapoor · 2025550195', address: '33 Orchard Avenue, Lakeview', insurance: 'Self-pay', doctor: 'Dr. Ananya Patel', acuity: 2, bloodGroup: 'O-', bedType: 'General', wait: 0 },
+  { id: 'P-DEMO-006', name: 'Vihaan Joshi', age: 39, concern: 'Acute abdominal pain', phone: '2025550106', emergencyContact: 'Kiran Joshi · 2025550196', address: '52 Birch Street, Riverton', insurance: 'CivicCare', doctor: 'Dr. James Wilson', acuity: 3, bloodGroup: 'B-', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-007', name: 'Saanvi Rao', age: 51, concern: 'High blood glucose', phone: '2025550107', emergencyContact: 'Arun Rao · 2025550197', address: '17 Meadow Walk, Lakeview', insurance: 'Metro Mutual', doctor: 'Dr. Priya Nair', acuity: 3, bloodGroup: 'AB-', bedType: 'General', wait: 0 },
+  { id: 'P-DEMO-008', name: 'Arjun Malhotra', age: 31, concern: 'Deep forearm laceration', phone: '2025550108', emergencyContact: 'Rhea Malhotra · 2025550198', address: '80 Pine Crescent, Riverton', insurance: 'Northstar Health', doctor: 'Dr. Marcus Vance', acuity: 3, bloodGroup: 'A+', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-009', name: 'Tara Nair', age: 46, concern: 'Pneumonia with shortness of breath', phone: '2025550109', emergencyContact: 'Dev Nair · 2025550199', address: '9 Brookside Way, Lakeview', insurance: 'CivicCare', doctor: 'Dr. Sarah Rao', acuity: 4, bloodGroup: 'B+', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-010', name: 'Dev Khanna', age: 63, concern: 'Uncontrolled hypertension', phone: '2025550110', emergencyContact: 'Simran Khanna · 2025550200', address: '41 Hilltop Drive, Riverton', insurance: 'Metro Mutual', doctor: 'Dr. David Kim', acuity: 2, bloodGroup: 'O+', bedType: 'General', wait: 0 },
+  { id: 'P-DEMO-011', name: 'Anika Bose', age: 24, concern: 'Severe seasonal allergic reaction', phone: '2025550111', emergencyContact: 'Maya Bose · 2025550201', address: '12 Garden Row, Lakeview', insurance: 'Northstar Health', doctor: 'Dr. Elena Gomez', acuity: 3, bloodGroup: 'A+', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-012', name: 'Ibrahim Khan', age: 71, concern: 'Dizziness and dehydration', phone: '2025550112', emergencyContact: 'Amina Khan · 2025550202', address: '63 Elm Terrace, Riverton', insurance: 'CivicCare', doctor: 'Dr. Ananya Patel', acuity: 2, bloodGroup: 'O-', bedType: 'General', wait: 0 },
+  { id: 'P-DEMO-013', name: 'Leah Thompson', age: 36, concern: 'Knee injury with limited mobility', phone: '2025550113', emergencyContact: 'Peter Thompson · 2025550203', address: '5 Riverside Close, Lakeview', insurance: 'Metro Mutual', doctor: 'Dr. Michael Chen', acuity: 3, bloodGroup: 'B-', bedType: 'Emergency', wait: 0 },
+  { id: 'P-DEMO-014', name: 'Mateo Rivera', age: 19, concern: 'Abdominal pain and nausea', phone: '2025550114', emergencyContact: 'Lucia Rivera · 2025550204', address: '77 Summit Avenue, Riverton', insurance: 'Self-pay', doctor: 'Dr. James Wilson', acuity: 3, bloodGroup: 'AB+', bedType: 'General', wait: 0 },
+  { id: 'P-DEMO-015', name: 'Priya Menon', age: 55, concern: 'Persistent cough and fever', phone: '2025550115', emergencyContact: 'Arun Menon · 2025550205', address: '22 Park Lane, Lakeview', insurance: 'Northstar Health', doctor: 'Dr. Sarah Rao', acuity: 3, bloodGroup: 'A-', bedType: 'General', wait: 0 }
 ];
 const STAFF_NAMES = ['Alex Morgan', 'Taylor Brooks', 'Riley Carter', 'Jordan Hayes', 'Casey Bennett', 'Morgan Ellis', 'Jamie Foster', 'Avery Collins', 'Cameron Reed', 'Drew Parker', 'Skyler Hayes', 'Quinn Sullivan', 'Peyton Ross', 'Reese Turner', 'Emerson Bailey', 'Finley Cooper', 'Harper Mitchell', 'Rowan Kelly'];
 const DOCTOR_ROSTER = [
@@ -160,16 +165,15 @@ function getAllActivePatients() {
   ];
 }
 function getAverageWaitTime() {
-  const queuedPatients = (state.queue || []).filter((patient) => patient && Number.isFinite(Number(patient.wait)));
+  const queuedPatients = sortedQueue().filter((patient) => patient && Number.isFinite(Number(patient.wait)));
   if (!queuedPatients.length) return 0;
-  const totalWait = queuedPatients.reduce((sum, patient) => sum + Math.max(0, Number(patient.wait || 0)), 0);
+  const totalWait = queuedPatients.reduce((sum, patient, index) => sum + getEstimatedWait(patient, index + 1), 0);
   return Math.round(totalWait / queuedPatients.length);
 }
 function getEstimatedWait(patient, position = 1) {
   const acuity = Number(patient?.acuity ?? 1);
-  if (acuity >= 5) return 0;
-  if (acuity >= 3) return 2 + Math.min(Math.max(position - 1, 0), 1);
-  return Math.max(5, position * 3);
+  const estimate = acuity >= 5 ? 0 : acuity >= 3 ? 2 + Math.min(Math.max(position - 1, 0), 1) : Math.max(5, position * 3);
+  return Math.max(0, estimate - Math.floor(Number(patient?.wait || 0)));
 }
 function getPriority(patient) {
   const acuity = Number(patient?.acuity ?? 1);
@@ -183,16 +187,16 @@ function getPriority(patient) {
   return (acuity * 100) + waitingBoost + conditionBoost + deteriorationBoost + uploadFactor;
 }
 function availableBeds() { return state.beds.filter((bed) => !bed.patient && !isOutageBed(bed)).length; }
-function assignedDoctorNames() { return new Set(state.beds.filter((bed) => bed.patient && bed.patient.doctor).map((bed) => bed.patient.doctor)); }
 function findAvailableDoctor(patient) {
-  const assigned = assignedDoctorNames();
-  if (DOCTORS.includes(patient.doctor) && !assigned.has(patient.doctor)) return patient.doctor;
-  const availableDoctor = DOCTORS.find((doctor) => !assigned.has(doctor));
-  if (availableDoctor) return availableDoctor;
-  return Number(patient?.acuity) >= 5 ? CRITICAL_RESERVE_DOCTOR : '';
+  if (DOCTORS.includes(patient.doctor)) return patient.doctor;
+  const caseloads = new Map(DOCTORS.map((doctor) => [doctor, 0]));
+  getAllActivePatients().forEach((activePatient) => {
+    if (caseloads.has(activePatient.doctor)) caseloads.set(activePatient.doctor, caseloads.get(activePatient.doctor) + 1);
+  });
+  return DOCTORS.reduce((leastLoaded, doctor) => caseloads.get(doctor) < caseloads.get(leastLoaded) ? doctor : leastLoaded, DOCTORS[0]) || (Number(patient?.acuity) >= 5 ? CRITICAL_RESERVE_DOCTOR : '');
 }
-function availableDoctors() { const regularDoctors = DOCTORS.filter((doctor) => !assignedDoctorNames().has(doctor)).length; const criticalWaiting = state.queue.some((patient) => Number(patient.acuity) >= 5); return regularDoctors + (criticalWaiting ? 1 : 0); }
-function isOutageBed(bed) { return bed.type === 'ICU' && bed.index >= WARDS.ICU.count - state.icuOutage; }
+function availableDoctors() { return Math.max(0, Math.min(DOCTORS.length, Number(state.doctors) || 0)); }
+function isOutageBed(bed, currentState = state) { return bed.type === 'ICU' && bed.index >= WARDS.ICU.count - currentState.icuOutage; }
 function sortedQueue() { return [...state.queue].sort((a, b) => getPriority(b) - getPriority(a)); }
 function saveState() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (error) { /* Storage can be unavailable in restricted browser contexts. */ }
@@ -257,23 +261,39 @@ function normalizeDoctorAssignments(savedState) {
     if (patient && !String(patient.bloodGroup || '').trim()) patient.bloodGroup = 'A+';
   };
   savedState.patientRecords.forEach(assignDefaultBloodGroup);
-  savedState.queue.forEach(assignDefaultBloodGroup);
+  savedState.queue.forEach((patient) => {
+    assignDefaultBloodGroup(patient);
+    if (!DOCTORS.includes(patient.doctor)) patient.doctor = DOCTORS[0];
+  });
   savedState.beds.forEach((bed, index) => {
     assignDefaultBloodGroup(bed.patient);
     if (bed.patient && !DOCTORS.includes(bed.patient.doctor) && bed.patient.doctor !== CRITICAL_RESERVE_DOCTOR) bed.patient.doctor = DOCTORS[index % DOCTORS.length];
+  });
+  savedState.patientRecords.forEach((patient, index) => {
+    if (!DOCTORS.includes(patient.doctor || patient.physician)) {
+      patient.doctor = DOCTORS[index % DOCTORS.length];
+      patient.physician = patient.doctor;
+    } else {
+      patient.doctor = patient.doctor || patient.physician;
+      patient.physician = patient.physician || patient.doctor;
+    }
   });
   ensureAmbulanceFleet(savedState);
   return savedState;
 }
 function restoreHistoricalPatients(currentState) {
   seedDoctorsWithActivePatients(currentState);
-  const existingNames = new Set([
-    ...currentState.patientRecords.map((patient) => patient.name),
-    ...currentState.queue.map((patient) => patient.name),
-    ...currentState.beds.filter((bed) => bed.patient).map((bed) => bed.patient.name)
-  ]);
-  RESTORED_PATIENTS.filter((patient) => !existingNames.has(patient.name)).forEach((patient) => {
-    const restored = createPatient(patient);
+  RESTORED_PATIENTS.forEach((demoPatient) => {
+    const activePatient = [...currentState.queue, ...currentState.beds.filter((bed) => bed.patient).map((bed) => bed.patient)].find((patient) => patient.name === demoPatient.name);
+    const record = currentState.patientRecords.find((patient) => patient.name === demoPatient.name);
+    [activePatient, record].filter(Boolean).forEach((patient) => {
+      ['age', 'concern', 'phone', 'emergencyContact', 'address', 'insurance', 'bloodGroup', 'doctor'].forEach((field) => {
+        if (demoPatient[field] !== undefined) patient[field] = demoPatient[field];
+      });
+      if (record) record.physician = demoPatient.doctor;
+    });
+    if (activePatient || record) return;
+    const restored = createPatient(demoPatient);
     currentState.patientRecords.push({ ...restored, physician: restored.doctor, status: 'Waiting', bed: 'Queue', treatment: 'Pending', activity: 'Restored from previous patient admission' });
     currentState.queue.push(restored);
   });
@@ -284,7 +304,7 @@ function seedDoctorsWithActivePatients(currentState) {
   const assignedDoctors = new Set(currentState.beds.filter((bed) => bed.patient && bed.patient.doctor).map((bed) => bed.patient.doctor));
   DEMO_ACTIVE_PATIENTS.forEach((demoPatient) => {
     if (assignedDoctors.has(demoPatient.doctor)) return;
-    const bed = currentState.beds.find((candidate) => candidate.type === demoPatient.bedType && !candidate.patient && !isOutageBed(candidate)) || currentState.beds.find((candidate) => !candidate.patient && !isOutageBed(candidate));
+    const bed = currentState.beds.find((candidate) => candidate.type === demoPatient.bedType && !candidate.patient && !isOutageBed(candidate, currentState)) || currentState.beds.find((candidate) => !candidate.patient && !isOutageBed(candidate, currentState));
     if (!bed) return;
     bed.patient = { ...demoPatient, bedType: bed.type, arrival: currentState.elapsed };
     currentState.patientRecords.push({ ...bed.patient, physician: bed.patient.doctor, status: 'In care', bed: bed.id, treatment: `${remainingMinutes(bed.patient.treatment)} min`, activity: 'Under active treatment' });
@@ -321,11 +341,20 @@ function renderDoctorPortal() {
   selectedDoctorName = doctor.name;
   $('#doctorHeading').innerHTML = `${doctor.name} <span>— ${doctor.specialty}</span>`;
   $('#doctorGreeting').textContent = `Good morning, Doctor. Here are ${doctor.name}'s active patients and their live care signals.`;
-  const assigned = state.beds.filter((bed) => bed.patient && bed.patient.doctor === doctor.name);
+  const assigned = [
+    ...state.beds.filter((bed) => bed.patient && bed.patient.doctor === doctor.name).map((bed) => ({ patient: bed.patient, bedId: bed.id })),
+    ...sortedQueue().filter((patient) => patient.doctor === doctor.name).map((patient) => ({ patient, position: sortedQueue().findIndex((queued) => queued.id === patient.id) + 1 }))
+  ];
   $('#doctorPatientCount').textContent = assigned.length;
-  $('#doctorCriticalCount').textContent = assigned.filter((bed) => bed.patient.acuity >= 5).length;
-  $('#doctorAvailableCount').textContent = Math.max(0, assigned.length - assigned.filter((bed) => bed.patient.acuity >= 5).length);
-  $('#doctorPatientGrid').innerHTML = assigned.length ? assigned.map(({ id, patient }) => `<article class="doctor-card panel"><div class="doctor-card-top"><div class="patient-avatar">${initials(patient.name)}</div><span class="triage-badge ${getBadge(patient).className}">${getBadge(patient).label}</span></div><h3>${patient.name}</h3><p class="doctor-bed">Bed ${id}</p><div class="doctor-vitals"><div><span>Heart rate</span><strong>${patient.heartRate} <small>BPM</small></strong></div><div><span>SpO2</span><strong>${patient.spo2}<small>%</small></strong></div><div><span>Time remaining</span><strong>${remainingMinutes(patient.treatment)} <small>min</small></strong></div></div><label class="note-label">Quick care note<textarea data-note-id="${id}" placeholder="Add a note for the care team...">${patient.note || ''}</textarea></label><button class="button button-primary wide" data-discharge-id="${id}">Complete Treatment / Discharge</button></article>`).join('') : '<div class="empty-role panel"><strong>No active patients assigned currently.</strong><p>Monitoring floor intake.</p></div>';
+  $('#doctorCriticalCount').textContent = assigned.filter(({ patient }) => patient.acuity >= 5).length;
+  $('#doctorAvailableCount').textContent = assigned.filter(({ patient }) => patient.acuity < 5).length;
+  $('#doctorPatientGrid').innerHTML = assigned.length ? assigned.map(({ patient, bedId, position }) => {
+    const waiting = !bedId;
+    const location = waiting ? `Queue position #${String(position).padStart(2, '0')} · ${getEstimatedWait(patient, position)} min estimated` : `Bed ${bedId}`;
+    const clinicalInfo = waiting ? '' : `<div class="doctor-vitals"><div><span>Heart rate</span><strong>${patient.heartRate} <small>BPM</small></strong></div><div><span>SpO2</span><strong>${patient.spo2}<small>%</small></strong></div><div><span>Time remaining</span><strong>${remainingMinutes(patient.treatment)} <small>min</small></strong></div></div>`;
+    const actions = waiting ? '' : `<label class="note-label">Quick care note<textarea data-note-id="${bedId}" placeholder="Add a note for the care team...">${patient.note || ''}</textarea></label><button class="button button-primary wide" data-discharge-id="${bedId}">Complete Treatment / Discharge</button>`;
+    return `<article class="doctor-card panel"><div class="doctor-card-top"><div class="patient-avatar">${initials(patient.name)}</div><span class="triage-badge ${getBadge(patient).className}">${getBadge(patient).label}</span></div><h3>${patient.name}</h3><p class="doctor-bed">${location} · ${waiting ? 'Waiting' : 'In care'}</p><p class="doctor-concern">${patient.concern}</p><div class="doctor-patient-details"><span>Age ${patient.age}</span><span>Blood ${patient.bloodGroup || 'Unknown'}</span><span>${patient.phone || 'No phone'}</span><span>${patient.emergencyContact || 'No emergency contact'}</span><span>${patient.insurance || 'No insurance details'}</span><span>${patient.address || 'No address on file'}</span></div>${clinicalInfo}${actions}</article>`;
+  }).join('') : '<div class="empty-role panel"><strong>No active patients assigned currently.</strong><p>Monitoring floor intake.</p></div>';
   $$('#doctorPatientGrid [data-discharge-id]').forEach((button) => button.addEventListener('click', () => dischargePatient(button.dataset.dischargeId)));
   $$('#doctorPatientGrid [data-note-id]').forEach((textarea) => textarea.addEventListener('input', (event) => { const bed = state.beds.find((item) => item.id === event.target.dataset.noteId); if (bed && bed.patient) { bed.patient.note = event.target.value; saveState(); } }));
 }
